@@ -211,9 +211,68 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
   .q-text { font-size: 16px; }
   .topbar { padding: 0 1rem; }
 }
+
+/* ── START SCREEN ── */
+.start-screen {
+  display: flex; position: fixed; inset: 0; background: #f5f5f3; z-index: 300;
+  align-items: center; justify-content: center; padding: 1.5rem;
+}
+.start-screen.hidden { display: none; }
+.start-box {
+  background: #fff; border: 1px solid #e0ddd6; border-radius: 16px;
+  width: 100%; max-width: 460px; overflow: hidden;
+}
+.start-head { background: #1a1a1a; color: #fff; padding: 2rem 2rem 1.5rem; }
+.start-tag { font-size: 11px; color: #888; letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 8px; }
+.start-title { font-size: 24px; font-weight: 600; margin-bottom: 4px; }
+.start-sub { font-size: 14px; color: #aaa; }
+.start-body { padding: 1.5rem 2rem 2rem; }
+.start-info { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0.75rem; margin-bottom: 1.5rem; }
+.start-info-item { text-align: center; background: #f5f5f3; border-radius: 8px; padding: 0.75rem 0.5rem; }
+.start-info-n { font-size: 22px; font-weight: 600; color: #378ADD; }
+.start-info-l { font-size: 11px; color: #888; margin-top: 2px; }
+.start-label { font-size: 13px; font-weight: 500; color: #555; margin-bottom: 6px; }
+.start-input {
+  width: 100%; padding: 10px 14px; font-size: 15px; border: 1px solid #ddd;
+  border-radius: 8px; outline: none; transition: border-color 0.15s; margin-bottom: 1.25rem;
+}
+.start-input:focus { border-color: #378ADD; }
+.start-btn {
+  width: 100%; padding: 13px; background: #378ADD; color: #fff; border: none;
+  border-radius: 8px; font-size: 15px; font-weight: 600; cursor: pointer; transition: opacity 0.15s;
+}
+.start-btn:hover { opacity: 0.88; }
+
+/* ── SUBMIT STATUS ── */
+.submit-status {
+  display: none; font-size: 13px; color: #888; margin-top: 0.5rem; text-align: center;
+}
+.submit-status.show { display: block; }
 </style>
 </head>
 <body>
+
+<!-- START SCREEN -->
+<div class="start-screen" id="startScreen">
+  <div class="start-box">
+    <div class="start-head">
+      <div class="start-tag">TOEIC Reading · 模擬測驗</div>
+      <div class="start-title">第 01 回</div>
+      <div class="start-sub">開始前請輸入您的姓名</div>
+    </div>
+    <div class="start-body">
+      <div class="start-info">
+        <div class="start-info-item"><div class="start-info-n">100</div><div class="start-info-l">題</div></div>
+        <div class="start-info-item"><div class="start-info-n">75</div><div class="start-info-l">分鐘</div></div>
+        <div class="start-info-item"><div class="start-info-n">3</div><div class="start-info-l">大題</div></div>
+      </div>
+      <div class="start-label">姓名（作答紀錄用）</div>
+      <input class="start-input" id="studentName" type="text" placeholder="請輸入姓名" maxlength="30"
+             onkeydown="if(event.key==='Enter') startTest()">
+      <button class="start-btn" onclick="startTest()">開始作答 →</button>
+    </div>
+  </div>
+</div>
 
 <!-- TOP BAR -->
 <div class="topbar">
@@ -354,6 +413,7 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
       <button class="btn-review" onclick="closeResults()">檢視解析</button>
       <button class="btn-retry-main" onclick="retryTest()">重新作答</button>
     </div>
+    <div class="submit-status" id="submitStatus"></div>
   </div>
 </div>
 
@@ -727,17 +787,28 @@ const P7_SETS = [
 // ─────────────────────────────────────────
 // STATE
 // ─────────────────────────────────────────
+// ▼ 部署 Apps Script 後，將 Web App URL 貼在這裡 ▼
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycby7jsyHd1GzsUXGZdIJPdxtesde4cwHKGx4_y0c_9DFJrOLCm8oPes2OxyIIDTCIW4n2g/exec';
+
 let answered = {};
 let submitted = false;
 let timerInterval = null;
 let secondsLeft = 75 * 60;
 let currentPart = 5;
-let reviewedParts = new Set(); // parts whose answers have been revealed mid-test
-let pendingNextPart = null;    // next part target when modal is open (null = final submit)
+let reviewedParts = new Set();
+let pendingNextPart = null;
+let studentName = '';
 
 // ─────────────────────────────────────────
 // BUILD QUIZ
 // ─────────────────────────────────────────
+function startTest() {
+  const input = document.getElementById('studentName').value.trim();
+  studentName = input || '匿名';
+  document.getElementById('startScreen').classList.add('hidden');
+  buildQuiz();
+}
+
 function buildQuiz() {
   answered = {};
   submitted = false;
@@ -1133,6 +1204,57 @@ function submitAll() {
 
   document.getElementById('submitAllBtn').style.display='none';
   document.getElementById('resultsOverlay').classList.add('show');
+  sendToSheet(s5, s6, s7);
+}
+
+// ─────────────────────────────────────────
+// SEND TO GOOGLE SHEETS
+// ─────────────────────────────────────────
+function sendToSheet(s5, s6, s7) {
+  if (!APPS_SCRIPT_URL) return;
+
+  const now = new Date();
+  const pad = n => String(n).padStart(2, '0');
+  const timestamp = `${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())} ${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
+
+  const allQs = getAllQuestions();
+  const answers = {};
+  allQs.forEach(q => {
+    const chosen = answered[q.qn];
+    answers[q.qn] = {
+      selectedLabel: chosen !== undefined ? 'ABCD'[chosen] : '—',
+      correct: chosen === q.ans
+    };
+  });
+
+  const payload = {
+    timestamp,
+    name: studentName,
+    score5: s5,
+    score6: s6,
+    score7: s7,
+    total: s5 + s6 + s7,
+    answers
+  };
+
+  const statusEl = document.getElementById('submitStatus');
+  statusEl.textContent = '正在儲存作答紀錄…';
+  statusEl.classList.add('show');
+
+  fetch(APPS_SCRIPT_URL, {
+    method: 'POST',
+    mode: 'no-cors',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload)
+  })
+  .then(() => {
+    statusEl.textContent = '✓ 作答紀錄已儲存';
+    statusEl.style.color = '#1D9E75';
+  })
+  .catch(() => {
+    statusEl.textContent = '⚠ 紀錄儲存失敗，請確認網路連線';
+    statusEl.style.color = '#E24B4A';
+  });
 }
 
 function closeResults() {

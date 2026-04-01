@@ -1,0 +1,1157 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>模擬測驗 01 — TOEIC Reading</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f5f5f3; color: #1a1a1a; }
+
+/* ── TOP BAR ── */
+.topbar {
+  position: sticky; top: 0; z-index: 100;
+  background: #fff; border-bottom: 1px solid #e0ddd6;
+  display: flex; align-items: center; gap: 1rem; padding: 0 1.5rem; height: 52px;
+}
+.topbar-home { font-size: 13px; color: #888; text-decoration: none; }
+.topbar-home:hover { color: #378ADD; }
+.topbar-title { font-size: 14px; font-weight: 600; flex: 1; }
+.topbar-timer { font-size: 15px; font-weight: 600; color: #1a1a1a; font-variant-numeric: tabular-nums; padding: 4px 12px; border: 1px solid #e0ddd6; border-radius: 6px; min-width: 72px; text-align: center; }
+.topbar-timer.warn { color: #E24B4A; border-color: #f5c6c6; background: #fff5f5; }
+.topbar-progress { font-size: 12px; color: #888; }
+
+/* ── PART TABS ── */
+.part-nav {
+  background: #fff; border-bottom: 1px solid #e0ddd6;
+  display: flex; padding: 0 1.5rem; gap: 0;
+}
+.part-tab {
+  padding: 10px 18px; font-size: 13px; font-weight: 500; cursor: pointer;
+  border-bottom: 2px solid transparent; color: #888; transition: all 0.15s;
+  user-select: none;
+}
+.part-tab.active { color: #378ADD; border-bottom-color: #378ADD; }
+.part-tab:hover:not(.active) { color: #555; }
+
+/* ── LAYOUT ── */
+.layout { display: flex; max-width: 1100px; margin: 0 auto; padding: 1.5rem 1rem; gap: 1.25rem; }
+
+/* ── SIDEBAR ── */
+.sidebar {
+  width: 200px; flex-shrink: 0;
+  position: sticky; top: 112px; align-self: flex-start;
+  max-height: calc(100vh - 130px); overflow-y: auto;
+}
+.sidebar-section { margin-bottom: 1.25rem; }
+.sidebar-label { font-size: 10px; font-weight: 600; letter-spacing: 0.08em; color: #aaa; text-transform: uppercase; margin-bottom: 6px; }
+.q-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 4px; }
+.q-dot {
+  width: 30px; height: 30px; border-radius: 6px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 10px; font-weight: 500; cursor: pointer;
+  border: 1px solid #e0ddd6; background: #fff; color: #888;
+  transition: all 0.1s;
+}
+.q-dot.answered { background: #EBF4FF; border-color: #c8dcf5; color: #378ADD; }
+.q-dot.correct { background: #E1F5EE; border-color: #a3dcc4; color: #1D9E75; }
+.q-dot.wrong { background: #FCEBEB; border-color: #f5b8b8; color: #E24B4A; }
+.q-dot:hover { border-color: #aaa; }
+
+/* ── MAIN ── */
+.main { flex: 1; min-width: 0; }
+
+.part-section { display: none; }
+.part-section.active { display: block; }
+
+.part-header { background: #fff; border: 1px solid #e0ddd6; border-radius: 12px; padding: 1rem 1.25rem; margin-bottom: 1rem; }
+.part-hdr-top { font-size: 11px; font-weight: 600; letter-spacing: 0.08em; color: #378ADD; text-transform: uppercase; margin-bottom: 4px; }
+.part-hdr-title { font-size: 18px; font-weight: 600; margin-bottom: 6px; }
+.part-hdr-dir { font-size: 13px; color: #666; line-height: 1.6; }
+
+/* ── Q CARD ── */
+.q-card { background: #fff; border: 1px solid #e0ddd6; border-radius: 12px; padding: 1.25rem; margin-bottom: 1rem; scroll-margin-top: 120px; }
+.q-num { font-size: 11px; color: #aaa; letter-spacing: 0.06em; margin-bottom: 8px; }
+.q-text { font-size: 15px; font-weight: 500; color: #1a1a1a; line-height: 1.7; margin-bottom: 1rem; }
+.blank { display: inline-block; min-width: 64px; border-bottom: 2px solid #378ADD; margin: 0 2px; }
+
+/* Part 6 passage block */
+.passage-block { background: #fafaf8; border: 1px solid #e8e5de; border-radius: 10px; padding: 1.25rem; margin-bottom: 1rem; font-size: 14px; line-height: 1.8; color: #333; }
+.passage-block .blank { min-width: 80px; }
+.passage-meta { font-size: 11px; color: #aaa; margin-bottom: 8px; letter-spacing: 0.04em; }
+
+/* Part 7 passage block */
+.reading-passage { background: #fafaf8; border: 1px solid #e8e5de; border-radius: 10px; padding: 1.25rem; margin-bottom: 1rem; font-size: 13.5px; line-height: 1.85; color: #333; }
+.reading-passage h4 { font-size: 13px; font-weight: 600; margin-bottom: 8px; color: #555; letter-spacing: 0.04em; text-transform: uppercase; }
+.reading-passage p { margin-bottom: 0.75rem; }
+.reading-passage p:last-child { margin-bottom: 0; }
+.reading-passage .doc-label { font-size: 11px; background: #eeecea; display: inline-block; padding: 2px 8px; border-radius: 4px; margin-bottom: 10px; color: #666; }
+.double-passage-wrap { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem; }
+.triple-passage-wrap { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem; margin-bottom: 1rem; }
+
+/* Options */
+.options { display: flex; flex-direction: column; gap: 7px; }
+.opt-btn {
+  display: flex; align-items: flex-start; gap: 10px; padding: 9px 14px;
+  border: 1px solid #e0ddd6; border-radius: 8px; background: #fff; cursor: pointer;
+  text-align: left; font-size: 14px; color: #1a1a1a; transition: all 0.12s; line-height: 1.5;
+}
+.opt-btn:hover:not(.disabled) { border-color: #bbb; background: #f8f7f5; }
+.opt-label {
+  width: 22px; height: 22px; border-radius: 50%; border: 1px solid #ccc;
+  display: flex; align-items: center; justify-content: center; font-size: 11px;
+  font-weight: 600; flex-shrink: 0; color: #888; transition: all 0.12s; margin-top: 1px;
+}
+.opt-btn.selected { border-color: #378ADD; background: #EBF4FF; }
+.opt-btn.selected .opt-label { background: #378ADD; border-color: #378ADD; color: #fff; }
+.opt-btn.correct { border-color: #1D9E75; background: #E1F5EE; }
+.opt-btn.correct .opt-label { background: #1D9E75; border-color: #1D9E75; color: #fff; }
+.opt-btn.wrong { border-color: #E24B4A; background: #FCEBEB; }
+.opt-btn.wrong .opt-label { background: #E24B4A; border-color: #E24B4A; color: #fff; }
+.opt-btn.show-correct { border-color: #1D9E75; }
+.opt-btn.show-correct .opt-label { background: #1D9E75; border-color: #1D9E75; color: #fff; }
+.opt-btn.disabled { cursor: default; }
+
+/* Explanation */
+.explanation { margin-top: 0.875rem; padding: 0.875rem 1rem; background: #f5f5f3; border-radius: 8px; border-left: 3px solid #378ADD; display: none; }
+.explanation.show { display: block; }
+.exp-answer { font-size: 11px; font-weight: 600; color: #185FA5; margin-bottom: 5px; letter-spacing: 0.04em; text-transform: uppercase; }
+.exp-text { font-size: 13px; color: #333; line-height: 1.7; }
+.exp-zh { font-size: 13px; color: #666; margin-top: 5px; line-height: 1.6; }
+.exp-trans { font-size: 13px; color: #444; margin-top: 8px; padding-top: 8px; border-top: 1px dashed #ddd; line-height: 1.65; }
+.exp-trans-label { font-size: 10px; font-weight: 600; letter-spacing: 0.06em; color: #aaa; text-transform: uppercase; margin-bottom: 3px; }
+
+/* Bottom nav */
+.bottom-bar { display: flex; align-items: center; gap: 1rem; padding: 1.5rem 0 0; }
+.btn-next { padding: 10px 24px; background: #378ADD; color: #fff; border: none; border-radius: 8px; font-size: 14px; font-weight: 500; cursor: pointer; transition: opacity 0.15s; }
+.btn-next:hover { opacity: 0.88; }
+.btn-submit-all { padding: 12px 32px; background: #1D9E75; color: #fff; border: none; border-radius: 8px; font-size: 15px; font-weight: 600; cursor: pointer; transition: opacity 0.15s; display: none; }
+.btn-submit-all:hover { opacity: 0.88; }
+.btn-submit-all:disabled { opacity: 0.4; cursor: not-allowed; }
+.answered-count { font-size: 13px; color: #888; flex: 1; text-align: right; }
+
+/* ── RESULTS ── */
+.results-overlay {
+  display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.45); z-index: 200;
+  align-items: flex-start; justify-content: center; padding: 2rem 1rem; overflow-y: auto;
+}
+.results-overlay.show { display: flex; }
+.results-box { background: #fff; border-radius: 16px; width: 100%; max-width: 640px; overflow: hidden; }
+.results-header { background: #1a1a1a; color: #fff; padding: 2rem; text-align: center; }
+.results-tag { font-size: 11px; color: #888; letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 8px; }
+.results-score { font-size: 64px; font-weight: 600; line-height: 1; }
+.results-score span { font-size: 20px; font-weight: 400; color: #aaa; }
+.results-grade { font-size: 15px; color: #aaa; margin-top: 6px; }
+.results-breakdown { padding: 1.5rem; display: grid; grid-template-columns: repeat(3,1fr); gap: 1rem; border-bottom: 1px solid #eee; }
+.rb-card { text-align: center; }
+.rb-part { font-size: 11px; color: #aaa; letter-spacing: 0.06em; text-transform: uppercase; margin-bottom: 4px; }
+.rb-score { font-size: 24px; font-weight: 600; color: #378ADD; }
+.rb-total { font-size: 12px; color: #aaa; }
+.rb-pct { font-size: 11px; color: #888; margin-top: 2px; }
+.results-actions { padding: 1.25rem 1.5rem; display: flex; gap: 0.75rem; }
+.btn-review { flex: 1; padding: 11px; background: #fff; border: 1px solid #ccc; border-radius: 8px; font-size: 14px; cursor: pointer; transition: background 0.15s; }
+.btn-review:hover { background: #f5f5f3; }
+.btn-retry-main { flex: 1; padding: 11px; background: #378ADD; color: #fff; border: none; border-radius: 8px; font-size: 14px; font-weight: 500; cursor: pointer; transition: opacity 0.15s; }
+.btn-retry-main:hover { opacity: 0.88; }
+
+/* ── PART COMPLETE MODAL ── */
+.pcm-overlay {
+  display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.45); z-index: 150;
+  align-items: center; justify-content: center; padding: 1rem;
+}
+.pcm-overlay.show { display: flex; }
+.pcm-box {
+  background: #fff; border-radius: 16px; width: 100%; max-width: 420px;
+  overflow: hidden; box-shadow: 0 12px 48px rgba(0,0,0,0.25);
+}
+.pcm-head { background: #1a1a1a; color: #fff; padding: 1.5rem 1.75rem; }
+.pcm-part-tag { font-size: 11px; color: #888; letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 6px; }
+.pcm-title { font-size: 22px; font-weight: 600; margin-bottom: 4px; }
+.pcm-stat { font-size: 14px; color: #aaa; }
+.pcm-body { padding: 1.25rem 1.75rem 1.75rem; }
+.pcm-desc { font-size: 13px; color: #666; line-height: 1.65; margin-bottom: 1.25rem; }
+.pcm-actions { display: flex; flex-direction: column; gap: 0.6rem; }
+.pcm-btn-review {
+  padding: 12px; background: #fff; border: 1px solid #ccc; border-radius: 8px;
+  font-size: 14px; font-weight: 500; cursor: pointer; transition: all 0.15s; text-align: center;
+}
+.pcm-btn-review:hover { background: #f5f5f3; border-color: #999; }
+.pcm-btn-continue {
+  padding: 12px; background: #378ADD; color: #fff; border: none; border-radius: 8px;
+  font-size: 14px; font-weight: 600; cursor: pointer; transition: opacity 0.15s;
+}
+.pcm-btn-continue:hover { opacity: 0.88; }
+.pcm-btn-submit-final {
+  padding: 12px; background: #1D9E75; color: #fff; border: none; border-radius: 8px;
+  font-size: 14px; font-weight: 600; cursor: pointer; transition: opacity 0.15s;
+}
+.pcm-btn-submit-final:hover { opacity: 0.88; }
+
+/* ── REVIEW BANNER ── */
+.review-banner {
+  display: none; position: sticky; bottom: 0; z-index: 90;
+  background: #1a1a1a; color: #fff;
+  align-items: center; gap: 1rem; padding: 0.875rem 1.5rem;
+}
+.review-banner.show { display: flex; }
+.review-banner-text { flex: 1; font-size: 13px; color: #aaa; }
+.review-banner-text strong { color: #fff; }
+.review-banner-btn {
+  padding: 9px 22px; background: #378ADD; color: #fff; border: none; border-radius: 7px;
+  font-size: 14px; font-weight: 600; cursor: pointer; transition: opacity 0.15s; white-space: nowrap;
+}
+.review-banner-btn:hover { opacity: 0.88; }
+.review-banner-btn.green { background: #1D9E75; }
+
+@media (max-width: 760px) {
+  .sidebar { display: none; }
+  .double-passage-wrap, .triple-passage-wrap { grid-template-columns: 1fr; }
+}
+@media (max-width: 480px) {
+  .q-text { font-size: 14px; }
+  .topbar { padding: 0 1rem; }
+}
+</style>
+</head>
+<body>
+
+<!-- TOP BAR -->
+<div class="topbar">
+  <a class="topbar-home" href="index.html">← 首頁</a>
+  <div class="topbar-title">模擬測驗 第 01 回</div>
+  <div class="topbar-progress" id="topProgress">0 / 100</div>
+  <div class="topbar-timer" id="timerDisplay">75:00</div>
+</div>
+
+<!-- PART TABS -->
+<div class="part-nav">
+  <div class="part-tab active" id="tab5" onclick="switchPart(5)">Part 5 &nbsp;<span style="color:#aaa;font-size:11px;">30題</span></div>
+  <div class="part-tab" id="tab6" onclick="switchPart(6)">Part 6 &nbsp;<span style="color:#aaa;font-size:11px;">16題</span></div>
+  <div class="part-tab" id="tab7" onclick="switchPart(7)">Part 7 &nbsp;<span style="color:#aaa;font-size:11px;">54題</span></div>
+</div>
+
+<div class="layout">
+
+  <!-- SIDEBAR -->
+  <div class="sidebar" id="sidebar">
+    <div class="sidebar-section" id="sidebarP5">
+      <div class="sidebar-label">Part 5 (Q101–130)</div>
+      <div class="q-grid" id="dotGrid5"></div>
+    </div>
+    <div class="sidebar-section" id="sidebarP6">
+      <div class="sidebar-label">Part 6 (Q131–146)</div>
+      <div class="q-grid" id="dotGrid6"></div>
+    </div>
+    <div class="sidebar-section" id="sidebarP7">
+      <div class="sidebar-label">Part 7 (Q147–200)</div>
+      <div class="q-grid" id="dotGrid7"></div>
+    </div>
+  </div>
+
+  <!-- MAIN -->
+  <div class="main">
+
+    <!-- PART 5 -->
+    <div class="part-section active" id="section5">
+      <div class="part-header">
+        <div class="part-hdr-top">Part 5 &nbsp;·&nbsp; Questions 101–130</div>
+        <div class="part-hdr-title">Incomplete Sentences</div>
+        <div class="part-hdr-dir">A word or phrase is missing in each sentence. Select the best answer to complete the sentence.</div>
+      </div>
+      <div id="qbody5"></div>
+      <div class="bottom-bar">
+        <button class="btn-next" onclick="askPartComplete(5, 6)">繼續 Part 6 →</button>
+        <div class="answered-count" id="cnt5"></div>
+      </div>
+    </div>
+
+    <!-- PART 6 -->
+    <div class="part-section" id="section6">
+      <div class="part-header">
+        <div class="part-hdr-top">Part 6 &nbsp;·&nbsp; Questions 131–146</div>
+        <div class="part-hdr-title">Text Completion</div>
+        <div class="part-hdr-dir">Read each passage and choose the best word, phrase, or sentence for each blank.</div>
+      </div>
+      <div id="qbody6"></div>
+      <div class="bottom-bar">
+        <button class="btn-next" onclick="askPartComplete(6, 7)">繼續 Part 7 →</button>
+        <div class="answered-count" id="cnt6"></div>
+      </div>
+    </div>
+
+    <!-- PART 7 -->
+    <div class="part-section" id="section7">
+      <div class="part-header">
+        <div class="part-hdr-top">Part 7 &nbsp;·&nbsp; Questions 147–200</div>
+        <div class="part-hdr-title">Reading Comprehension</div>
+        <div class="part-hdr-dir">Read each text and choose the best answer for each question.</div>
+      </div>
+      <div id="qbody7"></div>
+      <div class="bottom-bar">
+        <button class="btn-submit-all" id="submitAllBtn" onclick="askPartComplete(7, null)">交卷 Submit All</button>
+        <div class="answered-count" id="cnt7"></div>
+      </div>
+    </div>
+
+  </div><!-- /main -->
+</div><!-- /layout -->
+
+<!-- PART COMPLETE MODAL -->
+<div class="pcm-overlay" id="pcmOverlay">
+  <div class="pcm-box">
+    <div class="pcm-head">
+      <div class="pcm-part-tag" id="pcmTag"></div>
+      <div class="pcm-title" id="pcmTitle"></div>
+      <div class="pcm-stat" id="pcmStat"></div>
+    </div>
+    <div class="pcm-body">
+      <div class="pcm-desc" id="pcmDesc"></div>
+      <div class="pcm-actions">
+        <button class="pcm-btn-review" onclick="doReviewPart()">立刻檢視答案與詳解</button>
+        <button class="pcm-btn-continue" id="pcmBtnContinue" onclick="doContinueFromModal()"></button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- REVIEW BANNER -->
+<div class="review-banner" id="reviewBanner">
+  <div class="review-banner-text">
+    <strong id="reviewBannerTitle"></strong><span id="reviewBannerSub"> — 計時器持續運行中，作答中的題目不受影響</span>
+  </div>
+  <button class="review-banner-btn" id="reviewBannerBtn" onclick="doContinueFromBanner()"></button>
+</div>
+
+<!-- RESULTS OVERLAY -->
+<div class="results-overlay" id="resultsOverlay">
+  <div class="results-box">
+    <div class="results-header">
+      <div class="results-tag">模擬測驗 第 01 回 · 成績報告</div>
+      <div class="results-score" id="rTotalScore">0 <span>/ 100</span></div>
+      <div class="results-grade" id="rGrade"></div>
+    </div>
+    <div class="results-breakdown">
+      <div class="rb-card">
+        <div class="rb-part">Part 5</div>
+        <div class="rb-score" id="rS5">0</div>
+        <div class="rb-total">/ 30</div>
+        <div class="rb-pct" id="rP5"></div>
+      </div>
+      <div class="rb-card">
+        <div class="rb-part">Part 6</div>
+        <div class="rb-score" id="rS6">0</div>
+        <div class="rb-total">/ 16</div>
+        <div class="rb-pct" id="rP6"></div>
+      </div>
+      <div class="rb-card">
+        <div class="rb-part">Part 7</div>
+        <div class="rb-score" id="rS7">0</div>
+        <div class="rb-total">/ 54</div>
+        <div class="rb-pct" id="rP7"></div>
+      </div>
+    </div>
+    <div class="results-actions">
+      <button class="btn-review" onclick="closeResults()">檢視解析</button>
+      <button class="btn-retry-main" onclick="retryTest()">重新作答</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ─────────────────────────────────────────
+// QUESTION DATA
+// ─────────────────────────────────────────
+
+const P5 = [
+  // Q101-130 (index 0-29)
+  { q:"The project manager requested that all team members ------- their progress reports by Friday.", opts:["submits","submit","submitted","submitting"], ans:1, exp:"After 'request that', the verb uses subjunctive mood (base form).", zh:"'request that' 後接假設語氣，動詞用原形，選 (B)。", trans:"專案經理要求所有團隊成員在週五前提交進度報告。" },
+  { q:"The new employee quickly became ------- with the company's internal software system.", opts:["familiar","familiarly","familiarity","familiarize"], ans:0, exp:"'Became' is a linking verb; it takes an adjective. 'Familiar with' = comfortable knowing.", zh:"連綴動詞後接形容詞，'familiar with' 表熟悉，選 (A)。", trans:"新進員工很快就熟悉了公司的內部軟體系統。" },
+  { q:"------- the budget cuts, the research team managed to complete the study on schedule.", opts:["Because of","Despite","Although","While"], ans:1, exp:"'Despite' is a preposition used before a noun phrase to show contrast.", zh:"'Despite' 為介系詞，後接名詞，表讓步對比，選 (B)。", trans:"儘管遭遇預算刪減，研究團隊仍設法按時完成了這項研究。" },
+  { q:"Employees are encouraged to submit ------- suggestions for improving workplace safety.", opts:["construct","constructs","constructive","constructively"], ans:2, exp:"An adjective is needed before the noun 'suggestions'.", zh:"修飾名詞需形容詞，'constructive'（有建設性的），選 (C)。", trans:"員工被鼓勵提出有建設性的建議，以改善工作場所的安全。" },
+  { q:"The annual conference will be held ------- the downtown convention center this November.", opts:["at","in","on","by"], ans:0, exp:"'At' is used with specific named venues and buildings.", zh:"特定建築物或場所前用 'at'，選 (A)。", trans:"年度會議將於今年十一月在市中心會議中心舉行。" },
+  { q:"Sales figures for the third quarter were ------- higher than originally projected.", opts:["significance","significant","significantly","signify"], ans:2, exp:"An adverb modifies the comparative adjective 'higher'.", zh:"修飾形容詞比較級需副詞，選 (C) significantly。", trans:"第三季的銷售數字顯著高於原本的預測。" },
+  { q:"The CEO announced the company would ------- its operations into three new Asian markets.", opts:["expand","expands","expanded","expansion"], ans:0, exp:"Modal 'would' is followed by the base form of the verb.", zh:"情態動詞 'would' 後接動詞原形，選 (A)。", trans:"執行長宣布公司將把業務擴展到三個新的亞洲市場。" },
+  { q:"All applicants ------- submit a cover letter along with their resume to be considered.", opts:["should","must","can","might"], ans:1, exp:"'Must' expresses a strict mandatory requirement in official instructions.", zh:"'must' 語氣最強，表必要條件，選 (B)。", trans:"所有申請人必須隨履歷一併提交求職信，才能被列入考慮。" },
+  { q:"The ------- of the new product exceeded management's expectations in design and functionality.", opts:["develop","developer","development","developing"], ans:2, exp:"A noun is needed as the subject of the sentence.", zh:"句子需名詞作主詞，'development'，選 (C)。", trans:"新產品的開發在設計和功能方面都超越了管理層的預期。" },
+  { q:"Please contact our customer service department ------- you experience any difficulties.", opts:["if","unless","so that","even though"], ans:0, exp:"'If' introduces a conditional clause.", zh:"'if' 引導條件子句，選 (A)。", trans:"如果您遇到任何困難，請聯繫我們的客服部門。" },
+  { q:"The marketing team worked ------- to ensure the product launch was a success.", opts:["tire","tireless","tirelessly","tirelessness"], ans:2, exp:"An adverb modifies the verb 'worked'.", zh:"修飾動詞需副詞，'tirelessly'（不倦地），選 (C)。", trans:"行銷團隊不懈努力，確保產品發布圓滿成功。" },
+  { q:"The board of directors will meet ------- a week to review the company's financial performance.", opts:["once","one","every","each"], ans:0, exp:"'Once a week' is a fixed expression meaning one time per week.", zh:"'once a week' 為固定搭配，選 (A)。", trans:"董事會將每週召開一次會議，審查公司的財務狀況。" },
+  { q:"The training seminar is ------- for all new hires in the sales and marketing departments.", opts:["mandate","mandatory","mandatorily","mandating"], ans:1, exp:"An adjective is needed after the linking verb 'is'.", zh:"連綴動詞後接形容詞，'mandatory'（強制的），選 (B)。", trans:"培訓研討會對銷售和行銷部門的所有新進員工為強制性。" },
+  { q:"Ms. Tanaka was ------- for her outstanding contributions to the international marketing campaign.", opts:["recognize","recognition","recognized","recognizing"], ans:2, exp:"Passive voice: 'was + past participle'.", zh:"被動語態 'was + Vpp'，選 (C)。", trans:"田中女士因對國際行銷活動的傑出貢獻而獲得表彰。" },
+  { q:"The report indicates that consumer confidence has risen ------- over the past six months.", opts:["steady","steadier","steadily","steadiness"], ans:2, exp:"An adverb modifies the verb 'risen'.", zh:"修飾動詞需副詞，'steadily'，選 (C)。", trans:"報告顯示，消費者信心在過去六個月中穩定上升。" },
+  { q:"The company policy ------- employees from using personal devices during working hours.", opts:["prohibits","prohibitions","prohibitive","prohibit"], ans:0, exp:"Third-person singular subject requires verb + -s.", zh:"第三人稱單數主詞，動詞加 -s，選 (A)。", trans:"公司政策禁止員工在工作時間使用個人裝置。" },
+  { q:"We are pleased to inform you that your application has been ------- reviewed by our hiring committee.", opts:["thorough","thoroughly","thoroughness","thoroughgoing"], ans:1, exp:"An adverb modifies the passive verb phrase.", zh:"修飾動詞片語需副詞，'thoroughly'，選 (B)。", trans:"我們很高興地通知您，您的申請已由本公司招聘委員會徹底審閱。" },
+  { q:"The new facility will be large ------- to accommodate up to five hundred employees.", opts:["enough","too","very","so"], ans:0, exp:"'Adj + enough + to V' expresses sufficiency.", zh:"'adj + enough + to V' 句型，選 (A)。", trans:"新設施將足夠大，可容納多達五百名員工。" },
+  { q:"The revised budget proposal must be submitted ------- Monday at the latest.", opts:["until","by","at","since"], ans:1, exp:"'By' with a deadline means 'no later than'.", zh:"'by' 表期限，「不遲於」，選 (B)。", trans:"修訂後的預算提案最遲必須在週一前提交。" },
+  { q:"The ------- of the merger between the two companies is expected to create thousands of new jobs.", opts:["complete","completes","completing","completion"], ans:3, exp:"A noun is needed as the subject; 'completion of the merger' is a natural phrase.", zh:"需名詞作主詞，'completion'，選 (D)。", trans:"兩家公司完成合併後，預計將創造數千個新就業機會。" },
+  { q:"The shipment will arrive ------- two weeks, depending on customs clearance.", opts:["within","during","among","between"], ans:0, exp:"'Within' indicates a time frame before a deadline.", zh:"'within' 表「在……之內」，選 (A)。", trans:"貨物將在兩週內到達，視清關情況而定。" },
+  { q:"The supervisor asked the intern to make ------- copies of the financial report.", opts:["addition","additional","additionally","add"], ans:1, exp:"An adjective is needed before the noun 'copies'.", zh:"修飾名詞需形容詞，'additional'，選 (B)。", trans:"主管要求實習生多印幾份財務報告。" },
+  { q:"The new software upgrade is ------- with all operating systems released after 2018.", opts:["compatible","compatibility","compatibly","compatibleness"], ans:0, exp:"Adjective needed after linking verb 'is'; 'compatible with' is a fixed phrase.", zh:"'is' 後接形容詞，'compatible with' 為固定搭配，選 (A)。", trans:"新的軟體升級與 2018 年後發布的所有作業系統相容。" },
+  { q:"Customers who place orders before noon will ------- same-day delivery.", opts:["receive","receiving","received","to receive"], ans:0, exp:"'Will' is a modal followed by the base form.", zh:"情態動詞 'will' 後接原形，選 (A)。", trans:"在中午前下訂單的顧客將享有當日配送服務。" },
+  { q:"The ------- renovations to the office building will be completed by the end of the quarter.", opts:["schedule","scheduled","scheduling","scheduler"], ans:1, exp:"Past participle 'scheduled' acts as an adjective modifying 'renovations'.", zh:"過去分詞作形容詞修飾名詞，'scheduled'，選 (B)。", trans:"辦公大樓的預定翻修工程將於本季末完成。" },
+  { q:"Due to heavy traffic, the delivery truck arrived ------- than expected.", opts:["late","later","latest","lately"], ans:1, exp:"Comparative form 'later' follows 'than'.", zh:"'than' 前需比較級，'later'，選 (B)。", trans:"由於交通壅塞，送貨卡車比預期晚到。" },
+  { q:"The company's new dress code policy applies to ------- full-time and part-time employees.", opts:["either","both","neither","each"], ans:1, exp:"'Both ... and ...' connects two items inclusively.", zh:"'both ... and ...' 表兩者皆是，選 (B)。", trans:"公司的新服裝規定適用於全職和兼職員工。" },
+  { q:"Participants are asked to ------- their seats before the keynote speech begins.", opts:["find","finding","found","be find"], ans:0, exp:"After 'are asked to', the base form (infinitive) is used.", zh:"'asked to' 後接動詞原形，選 (A)。", trans:"與會者被要求在主題演講開始前就座。" },
+  { q:"The manager was ------- by the quality of the intern's final report.", opts:["impress","impression","impressive","impressed"], ans:3, exp:"Passive adjective 'impressed' describes the manager's emotional state.", zh:"表情緒狀態用過去分詞，'impressed'，選 (D)。", trans:"經理對實習生最終報告的品質印象深刻。" },
+  { q:"All ------- materials for the training workshop will be provided at no extra cost.", opts:["require","required","requirement","requiring"], ans:1, exp:"Past participle 'required' modifies the noun 'materials'.", zh:"過去分詞修飾名詞，'required'（所需的），選 (B)。", trans:"培訓工作坊所需的所有材料將免費提供。" }
+];
+
+const P6_PASSAGES = [
+  {
+    meta: "Questions 131–134: Email",
+    text: `Dear Mr. Chen,\n\nI am writing to confirm your reservation at the Meridian Hotel for the nights of March 15–17. Your room will be [131] upon your arrival at 3:00 P.M. As requested, we have arranged a non-smoking room on the tenth floor with a city view.\n\nPlease note that our complimentary breakfast is [132] from 7:00 to 10:00 A.M. in the main dining area. Should you require early check-in, we kindly ask that you contact the front desk [133] advance so that we may accommodate your request.\n\n[134] any assistance prior to your visit, please do not hesitate to contact us directly.\n\nWarm regards,\nMeridian Hotel Guest Services`,
+    qs: [
+      { n:131, opts:["ready","readiness","readily","readying"], ans:0, exp:"'Be ready' is the correct predicate adjective after the linking verb 'will be'.", zh:"'will be' 後接形容詞，'ready'（已準備好），選 (A)。" },
+      { n:132, opts:["serve","served","serving","service"], ans:1, exp:"Passive voice: breakfast 'is served' during specific hours.", zh:"早餐「被供應」用被動，'served'，選 (B)。" },
+      { n:133, opts:["in","on","with","for"], ans:0, exp:"'In advance' is a fixed prepositional phrase meaning ahead of time.", zh:"'in advance' 為固定搭配，表提前，選 (A)。" },
+      { n:134, opts:["If you need","Should you require","Requiring","You need"], ans:1, exp:"'Should + subject + verb' is a formal conditional inversion used in business writing.", zh:"'Should you require' 為正式倒裝條件句，選 (B)。" }
+    ]
+  },
+  {
+    meta: "Questions 135–138: Notice",
+    text: `NOTICE TO ALL STAFF\n\nEffective Monday, April 7, the building management will [135] routine maintenance on the elevators in the north wing. As a result, these elevators will be [136] from 8:00 A.M. to 5:00 P.M. on weekdays for approximately two weeks.\n\nDuring this period, employees are encouraged to use the south wing elevators or the stairwells, which remain fully accessible. We apologize for any [137] this may cause. [138]\n\nThank you for your cooperation.\nBuilding Management`,
+    qs: [
+      { n:135, opts:["conduct","conducts","conducted","be conducting"], ans:0, exp:"'Will + base form' is the standard future tense construction.", zh:"'will' 後接原形動詞，選 (A)。" },
+      { n:136, opts:["operational","unavailable","expanded","relocated"], ans:1, exp:"The context says maintenance will occur, so elevators will be 'unavailable'.", zh:"進行維護期間電梯「無法使用」，選 (B) unavailable。" },
+      { n:137, opts:["convenient","inconvenience","convenience","inconveniently"], ans:1, exp:"A noun is needed after the possessive 'any'; 'inconvenience' fits the context.", zh:"'any' 後接名詞，不便之處用 'inconvenience'，選 (B)。" },
+      { n:138, opts:["We look forward to serving you.","Your patience and understanding are greatly appreciated.","Please submit your complaints in writing.","The elevator will not return to service."], ans:1, exp:"A closing sentence thanking people for patience fits the apology context.", zh:"結尾感謝耐心配合，語意最自然，選 (B)。" }
+    ]
+  },
+  {
+    meta: "Questions 139–142: Memorandum",
+    text: `MEMORANDUM\n\nTo: All Department Heads\nFrom: Human Resources\nRe: Annual Performance Review Schedule\n\nThis memo is to inform you that the annual performance review cycle will begin on May 1. All department heads are [139] to submit completed evaluation forms for each of their direct reports no later than May 31.\n\nThe forms are available for download on the company intranet. Please ensure that evaluations are [140] and objective, focusing on measurable achievements and areas for professional growth. Reviews that are [141] incomplete or improperly completed will be returned for revision.\n\n[142] questions about the process, please contact the HR department at extension 204.\n\nThank you.`,
+    qs: [
+      { n:139, opts:["requested","requesting","request","to request"], ans:0, exp:"'Are requested to' is a formal passive construction meaning 'are asked to'.", zh:"'are requested to' 為正式被動，表要求，選 (A)。" },
+      { n:140, opts:["thorough","thoroughly","thoroughness","thoroughfare"], ans:0, exp:"Two adjectives joined by 'and' are needed: 'thorough and objective'.", zh:"與 'objective' 並列需形容詞，'thorough'，選 (A)。" },
+      { n:141, opts:["considered","determined","deemed","found"], ans:2, exp:"'Deemed' means 'judged to be'; it collocates naturally with 'incomplete'.", zh:"'deemed' 表判定為，搭配 'incomplete' 最自然，選 (C)。" },
+      { n:142, opts:["For","About","Regarding","Should you have"], ans:3, exp:"'Should you have questions' is a formal conditional inversion appropriate for memos.", zh:"正式備忘錄常用 'Should you have...' 倒裝條件句，選 (D)。" }
+    ]
+  },
+  {
+    meta: "Questions 143–146: Advertisement",
+    text: `GREENLEAF CORPORATE CATERING\nFresh · Flexible · Reliable\n\nIs your office [143] the right catering partner? Look no further than Greenleaf Corporate Catering, your trusted provider of healthy, delicious meals for business events of all sizes.\n\nWe offer fully customizable menus [144] a variety of dietary requirements, including vegetarian, vegan, and gluten-free options. Whether you are planning a team lunch, a board meeting, or a company-wide celebration, our professional staff will ensure your event runs [145].\n\nContact us today to receive a complimentary quote. [146] orders placed at least 72 hours in advance will qualify for our early-booking discount of 10%.\n\nVisit us at www.greenleafcatering.com`,
+    qs: [
+      { n:143, opts:["searching for","searched","in search","to search"], ans:0, exp:"'Is your office searching for...' is the natural progressive form for a question.", zh:"疑問句用進行式，'searching for'，選 (A)。" },
+      { n:144, opts:["catered to","accommodating","satisfying","meeting"], ans:1, exp:"'Accommodating a variety of dietary requirements' means catering to different dietary needs.", zh:"'accommodating' 表顧及各種需求，搭配最自然，選 (B)。" },
+      { n:145, opts:["smooth","smoothly","smoothness","smoother"], ans:1, exp:"An adverb modifies the verb 'runs'.", zh:"修飾動詞 'runs' 需副詞，'smoothly'，選 (B)。" },
+      { n:146, opts:["All","Any","Every","Each"], ans:0, exp:"'All orders' refers collectively to the entire category of orders meeting the condition.", zh:"'All orders' 指所有符合條件的訂單，選 (A)。" }
+    ]
+  }
+];
+
+const P7_SETS = [
+  // ── SINGLE PASSAGES ──
+  {
+    type: "single",
+    meta: "Questions 147–148: E-mail",
+    passage: `<div class="doc-label">E-mail</div>
+<p><strong>From:</strong> j.harris@veritastech.com<br><strong>To:</strong> allstaff@veritastech.com<br><strong>Subject:</strong> Office Closure — Public Holiday<br><strong>Date:</strong> Thursday, April 3</p>
+<p>Dear Team,</p>
+<p>This is a reminder that the office will be closed on Monday, April 7, in observance of the national public holiday. Normal business hours will resume on Tuesday, April 8.</p>
+<p>If you have any urgent matters that require attention during the closure, please contact the on-call support team at support@veritastech.com. Response times may be longer than usual.</p>
+<p>Enjoy the long weekend!</p>
+<p>Best,<br>Janet Harris<br>Office Manager, Veritas Technology</p>`,
+    qs: [
+      { n:147, q:"Why was the e-mail sent?", opts:["To announce a new support policy","To inform staff of an office closure","To introduce a new office manager","To reschedule a team meeting"], ans:1, exp:"The e-mail clearly states the office will be closed on April 7.", zh:"郵件主旨為告知辦公室關閉，選 (B)。" },
+      { n:148, q:"What are employees told to do for urgent matters?", opts:["Call Janet Harris directly","Submit a written request","E-mail the on-call support team","Wait until Tuesday"], ans:2, exp:"The e-mail says to contact the on-call support team at support@veritastech.com.", zh:"郵件指示聯繫 on-call 支援小組，選 (C)。" }
+    ]
+  },
+  {
+    type: "single",
+    meta: "Questions 149–151: Notice",
+    passage: `<div class="doc-label">Notice</div>
+<h4>CITY LIBRARY — SUMMER READING PROGRAM</h4>
+<p>The City Library is pleased to announce the launch of its annual Summer Reading Program, running from June 1 to August 31. This year's theme is <em>"Explore the World Through Books."</em></p>
+<p>Participants of all ages are welcome. Children aged 5–12 who complete at least eight books during the program period will receive a Certificate of Achievement. Adults who log 15 or more books will be entered into a prize draw for a $200 gift card to a local bookstore.</p>
+<p>To register, visit the front desk or sign up online at www.citylibrary.org/summer. Registration is free of charge. The program begins June 1; registration closes May 25.</p>`,
+    qs: [
+      { n:149, q:"What is the theme of this year's Summer Reading Program?", opts:["Discovering Local Heroes","Explore the World Through Books","Science and Technology","Celebrating Community Stories"], ans:1, exp:"The notice states the theme is 'Explore the World Through Books'.", zh:"公告明確指出主題，選 (B)。" },
+      { n:150, q:"What will children who complete at least eight books receive?", opts:["A gift card","A free library membership","A Certificate of Achievement","A prize draw entry"], ans:2, exp:"Children aged 5-12 completing eight books receive a Certificate of Achievement.", zh:"8本以上獲頒成就證書，選 (C)。" },
+      { n:151, q:"When is the deadline for registration?", opts:["June 1","August 31","May 25","July 1"], ans:2, exp:"Registration closes May 25.", zh:"報名截止 5 月 25 日，選 (C)。" }
+    ]
+  },
+  {
+    type: "single",
+    meta: "Questions 152–154: Article",
+    passage: `<div class="doc-label">Business News</div>
+<h4>NEXWAVE COMMUNICATIONS EXPANDS INTO SOUTHEAST ASIA</h4>
+<p>NexWave Communications, a leading provider of cloud-based business software, announced on Tuesday that it will open regional offices in Singapore and Jakarta by the end of the year. The expansion is part of the company's five-year growth strategy aimed at capturing a larger share of the rapidly developing Southeast Asian market.</p>
+<p>CEO Maria Delgado stated in a press release that the company plans to hire approximately 200 local employees across both locations. "Southeast Asia represents an enormous growth opportunity," said Delgado. "We are committed to hiring local talent and building solutions tailored to regional needs."</p>
+<p>NexWave currently operates in 14 countries and reported annual revenues of $1.2 billion last year.</p>`,
+    qs: [
+      { n:152, q:"What did NexWave Communications announce?", opts:["A new software product launch","Quarterly revenue results","Plans to open offices in Southeast Asia","A merger with a competitor"], ans:2, exp:"The article states NexWave will open offices in Singapore and Jakarta.", zh:"宣布將在東南亞開設辦事處，選 (C)。" },
+      { n:153, q:"According to the CEO, what is one of NexWave's goals?", opts:["Reducing operational costs","Hiring local talent","Acquiring a local company","Relocating its headquarters"], ans:1, exp:"Delgado says they are 'committed to hiring local talent'.", zh:"CEO 表示致力於雇用當地人才，選 (B)。" },
+      { n:154, q:"How many countries does NexWave currently operate in?", opts:["2","8","14","20"], ans:2, exp:"The article states NexWave currently operates in 14 countries.", zh:"文中明確指出 14 個國家，選 (C)。" }
+    ]
+  },
+  {
+    type: "single",
+    meta: "Questions 155–157: Advertisement",
+    passage: `<div class="doc-label">Advertisement</div>
+<h4>PROLINK BUSINESS TRAVEL — CORPORATE SOLUTIONS</h4>
+<p>Managing business travel for your team shouldn't be complicated. ProLink Business Travel offers a complete suite of corporate travel management services, including flight and hotel booking, expense reporting tools, and 24/7 customer support.</p>
+<p><strong>Why choose ProLink?</strong></p>
+<p>✔ Negotiated rates with over 200 airlines and 5,000 hotels worldwide<br>
+✔ Centralized billing for simplified accounting<br>
+✔ Dedicated account managers for companies with 50+ employees<br>
+✔ Mobile app for on-the-go booking and itinerary management</p>
+<p>Sign up before May 31 and receive three months of premium service at no charge. Call 1-800-PROLINK or visit prolink-travel.com to request a free consultation.</p>`,
+    qs: [
+      { n:155, q:"What service does ProLink NOT explicitly mention?", opts:["Flight and hotel booking","Visa application assistance","Expense reporting tools","24/7 customer support"], ans:1, exp:"Visa assistance is not mentioned in the advertisement.", zh:"廣告中未提及簽證申請服務，選 (B)。" },
+      { n:156, q:"What do companies with 50 or more employees receive?", opts:["A discount on all bookings","A free mobile app","A dedicated account manager","Centralized billing"], ans:2, exp:"The ad states dedicated account managers are for companies with 50+ employees.", zh:"50人以上企業有專屬客戶經理，選 (C)。" },
+      { n:157, q:"What is offered to companies that sign up before May 31?", opts:["A free consultation only","Three months of free premium service","A 10% booking discount","A complimentary business trip"], ans:1, exp:"Sign up before May 31 to receive three months of premium service at no charge.", zh:"5月31日前加入可免費享三個月高級服務，選 (B)。" }
+    ]
+  },
+  {
+    type: "single",
+    meta: "Questions 158–160: Letter",
+    passage: `<div class="doc-label">Letter</div>
+<p><strong>March 28</strong></p>
+<p>Ms. Anya Roth<br>Director of Procurement<br>Hartfield Manufacturing Co.<br>44 Industrial Drive<br>Portland, OR 97201</p>
+<p>Dear Ms. Roth,</p>
+<p>Thank you for your recent inquiry regarding our industrial packaging solutions. We are pleased to offer you a 15% volume discount on orders exceeding 500 units per month, valid for a 12-month contract period.</p>
+<p>Enclosed please find our updated product catalog and price list. We would be delighted to schedule a product demonstration at your facility at a time that is convenient for you.</p>
+<p>We look forward to the possibility of a long-term partnership with Hartfield Manufacturing. Please feel free to reach me directly at (503) 555-0192.</p>
+<p>Sincerely,<br>David Park<br>Regional Sales Manager<br>Summit Packaging Inc.</p>`,
+    qs: [
+      { n:158, q:"What is the main purpose of this letter?", opts:["To request payment for an overdue invoice","To respond to an inquiry with a business offer","To confirm a product shipment","To announce a price increase"], ans:1, exp:"The letter responds to an inquiry and offers a discount.", zh:"此信回覆詢問並提出優惠方案，選 (B)。" },
+      { n:159, q:"What discount is being offered to Hartfield Manufacturing?", opts:["10% on all orders","15% for orders over 500 units per month","20% for a two-year contract","5% for early payment"], ans:1, exp:"A 15% volume discount for orders exceeding 500 units/month.", zh:"每月超過 500 件享 15% 折扣，選 (B)。" },
+      { n:160, q:"What has David Park included with the letter?", opts:["A signed contract","A sample product","A product catalog and price list","A purchase order form"], ans:2, exp:"The letter says 'Enclosed please find our updated product catalog and price list'.", zh:"隨信附上產品目錄與價格表，選 (C)。" }
+    ]
+  },
+  {
+    type: "single",
+    meta: "Questions 161–163: Online Posting",
+    passage: `<div class="doc-label">Online Review</div>
+<h4>TechZone Electronics — Customer Review</h4>
+<p><strong>★★★★☆ &nbsp; Great product, slow shipping</strong><br>Reviewed by: K. Yamamoto &nbsp;·&nbsp; Verified Purchase</p>
+<p>I purchased the ProSound X3 wireless headphones last month and have been very impressed with the sound quality and noise-canceling performance. The battery life is excellent — I get about 30 hours per charge, which is even better than advertised.</p>
+<p>My only complaint is that the headphones took 12 business days to arrive, even though I paid for standard 5-7 day shipping. When I contacted customer service, they were polite but explained the delay was due to a warehouse backlog. I was offered a $10 store credit as compensation, which I appreciated, although I would have preferred faster resolution.</p>
+<p>Overall, a great product that I would recommend to others, but be prepared for possible shipping delays.</p>`,
+    qs: [
+      { n:161, q:"What does K. Yamamoto praise about the headphones?", opts:["The design and color options","The sound quality and battery life","The affordable price","The fast delivery"], ans:1, exp:"The reviewer praises sound quality, noise-canceling, and battery life.", zh:"評論讚揚音質和電池續航力，選 (B)。" },
+      { n:162, q:"What was the cause of the shipping delay?", opts:["A lost package","A customs issue","A warehouse backlog","An incorrect address"], ans:2, exp:"Customer service explained the delay was due to a warehouse backlog.", zh:"客服解釋延遲原因是倉庫積壓，選 (C)。" },
+      { n:163, q:"What compensation did the customer receive?", opts:["A full refund","A replacement product","Free expedited shipping","A $10 store credit"], ans:3, exp:"The customer was offered a $10 store credit as compensation.", zh:"收到 10 美元商店積分作為補償，選 (D)。" }
+    ]
+  },
+  {
+    type: "single",
+    meta: "Questions 164–167: Memo",
+    passage: `<div class="doc-label">Internal Memo</div>
+<p><strong>To:</strong> All Staff<br><strong>From:</strong> IT Department<br><strong>Date:</strong> April 1<br><strong>Re:</strong> Mandatory System Update — Action Required</p>
+<p>The IT department will be performing a critical security update to all company computers this weekend. The update will be applied automatically on Saturday evening between 10:00 P.M. and 3:00 A.M.</p>
+<p>To ensure the update completes successfully, all employees must leave their computers powered on and connected to the company network before leaving the office on Friday afternoon. Laptops taken home should be left connected to power and Wi-Fi.</p>
+<p>After the update, you may notice that the login screen has a slightly different appearance. Your username and password will remain unchanged. If you experience any technical issues following the update, please contact the IT help desk at extension 301 or helpdesk@company.com.</p>
+<p>Thank you for your cooperation.</p>`,
+    qs: [
+      { n:164, q:"What is the purpose of this memo?", opts:["To announce a new company policy","To notify staff of a mandatory IT update","To introduce new login credentials","To schedule a system shutdown"], ans:1, exp:"The memo informs staff about a mandatory security update.", zh:"備忘錄通知員工進行強制安全更新，選 (B)。" },
+      { n:165, q:"What must employees do before leaving on Friday?", opts:["Back up all their files","Log out of all applications","Leave computers on and connected to the network","Submit a support request"], ans:2, exp:"Staff must leave computers powered on and connected to the company network.", zh:"員工須讓電腦保持開機並連接公司網路，選 (C)。" },
+      { n:166, q:"What will change after the update?", opts:["Login credentials","The login screen appearance","The company's Wi-Fi password","The company email system"], ans:1, exp:"The memo notes the login screen may have a slightly different appearance.", zh:"登入畫面外觀可能略有不同，選 (B)。" },
+      { n:167, q:"Who should employees contact if they have problems after the update?", opts:["Their direct supervisor","The HR department","The IT help desk","The building manager"], ans:2, exp:"Contact the IT help desk at extension 301 or helpdesk@company.com.", zh:"聯繫 IT 服務台，選 (C)。" }
+    ]
+  },
+  {
+    type: "single",
+    meta: "Questions 168–171: Article",
+    passage: `<div class="doc-label">Industry News</div>
+<h4>FLEXIBLE WORK POLICIES BECOME STANDARD ACROSS INDUSTRIES</h4>
+<p>A new report by workforce consultancy Talentrix has found that 74% of companies surveyed now offer some form of flexible work arrangement, up from 48% just five years ago. The shift reflects growing recognition among employers that flexibility is a key factor in attracting and retaining top talent.</p>
+<p>The most commonly offered arrangements include remote work options, flexible start and end times, and compressed workweeks. According to the report, employees who have access to flexible arrangements report higher job satisfaction and lower rates of burnout compared to those who do not.</p>
+<p>However, the report also notes several challenges. Managers cite difficulties in monitoring productivity and maintaining team cohesion as the most common concerns. Companies that invested in collaboration tools and set clear performance metrics were more successful in managing distributed teams.</p>
+<p>Talentrix recommends that companies develop formal flexible work policies and train managers to lead remote teams effectively.</p>`,
+    qs: [
+      { n:168, q:"What does the Talentrix report primarily focus on?", opts:["Remote work productivity tools","The growth of flexible work arrangements","Employee burnout statistics","Salary trends in tech industries"], ans:1, exp:"The report focuses on flexible work arrangements and their prevalence.", zh:"報告主要探討彈性工作安排的普及，選 (B)。" },
+      { n:169, q:"What percentage of companies surveyed now offer flexible work?", opts:["48%","62%","74%","83%"], ans:2, exp:"The report states 74% of companies now offer flexible work arrangements.", zh:"報告指出 74% 的企業提供彈性工作安排，選 (C)。" },
+      { n:170, q:"According to the report, what do employees with flexible arrangements report?", opts:["Higher salaries","More opportunities for promotion","Higher job satisfaction","Fewer collaboration challenges"], ans:2, exp:"Employees with flexible arrangements report higher job satisfaction and lower burnout.", zh:"員工回報更高的工作滿意度，選 (C)。" },
+      { n:171, q:"What does Talentrix recommend for companies?", opts:["Eliminating all remote work policies","Developing formal flexible work policies","Reducing the number of remote employees","Investing only in office renovations"], ans:1, exp:"Talentrix recommends companies develop formal flexible work policies.", zh:"Talentrix 建議公司制定正式的彈性工作政策，選 (B)。" }
+    ]
+  },
+  {
+    type: "single",
+    meta: "Questions 172–175: Schedule",
+    passage: `<div class="doc-label">Conference Schedule</div>
+<h4>INNOVATE 2026 — TECHNOLOGY LEADERSHIP SUMMIT</h4>
+<p><strong>Day 1 — Thursday, May 8</strong></p>
+<p>8:30 A.M. &nbsp; Registration & Welcome Coffee — Lobby<br>
+9:00 A.M. &nbsp; Opening Keynote: "The Future of AI in Business" — Grand Hall A<br>
+11:00 A.M. &nbsp; Panel Discussion: Digital Transformation Strategies — Room 204<br>
+1:00 P.M. &nbsp; Lunch Break — Terrace Restaurant<br>
+2:30 P.M. &nbsp; Workshop: Cybersecurity Best Practices — Room 109<br>
+4:00 P.M. &nbsp; Networking Session — Exhibition Hall<br>
+6:30 P.M. &nbsp; Welcome Dinner (by invitation only) — Rooftop Terrace</p>
+<p><em>Note: All sessions are included in the standard registration fee except the Welcome Dinner, which requires a separate ticket. Seats are limited.</em></p>`,
+    qs: [
+      { n:172, q:"Where will the opening keynote be held?", opts:["Room 204","Room 109","Grand Hall A","Exhibition Hall"], ans:2, exp:"The schedule lists the Opening Keynote in Grand Hall A.", zh:"開幕主題演講在 Grand Hall A，選 (C)。" },
+      { n:173, q:"What is the topic of the 2:30 P.M. workshop?", opts:["Digital Transformation","AI in Business","Cybersecurity Best Practices","Networking Strategies"], ans:2, exp:"The 2:30 P.M. workshop is on Cybersecurity Best Practices.", zh:"下午 2:30 的工作坊主題為網絡安全最佳實踐，選 (C)。" },
+      { n:174, q:"What is NOT included in the standard registration fee?", opts:["The panel discussion","The networking session","The workshop","The welcome dinner"], ans:3, exp:"The note states the Welcome Dinner requires a separate ticket.", zh:"歡迎晚宴需另購門票，不含在標準報名費中，選 (D)。" },
+      { n:175, q:"What is indicated about the welcome dinner?", opts:["It is free for all attendees","It is held in Room 204","Seats are limited","It starts at 7:00 P.M."], ans:2, exp:"The note says 'Seats are limited'.", zh:"注意事項指出座位有限，選 (C)。" }
+    ]
+  },
+  {
+    type: "single",
+    meta: "Questions 176–180: Report Extract",
+    passage: `<div class="doc-label">Quarterly Report — Extract</div>
+<h4>BLOOMFIELD RETAIL GROUP — Q1 PERFORMANCE SUMMARY</h4>
+<p>Bloomfield Retail Group reported total revenues of $84.7 million for the first quarter of the year, representing a 12% increase compared to the same period last year. The growth was primarily driven by strong performance in the company's online sales division, which grew 34% year-over-year and now accounts for 41% of total revenue.</p>
+<p>In contrast, in-store sales declined by 3% due to reduced foot traffic at several flagship locations. The company has attributed this decline to ongoing construction near two of its highest-revenue stores in the downtown district.</p>
+<p>The company plans to invest $15 million in logistics infrastructure over the next 18 months to support continued e-commerce growth. CEO Thomas Bloom stated, "We are confident that our digital-first strategy positions us well for sustainable long-term growth."</p>
+<p>Bloomfield expects Q2 revenues to reach between $88 million and $92 million.</p>`,
+    qs: [
+      { n:176, q:"What was Bloomfield's total Q1 revenue?", opts:["$74.7 million","$84.7 million","$88 million","$92 million"], ans:1, exp:"The report states total revenues of $84.7 million for Q1.", zh:"Q1 總營收為 8,470 萬美元，選 (B)。" },
+      { n:177, q:"What percentage of total revenue comes from online sales?", opts:["12%","34%","41%","3%"], ans:2, exp:"Online sales now account for 41% of total revenue.", zh:"線上銷售佔總營收 41%，選 (C)。" },
+      { n:178, q:"Why did in-store sales decline?", opts:["Poor product selection","Price competition from rivals","Construction near flagship stores","A decrease in marketing spending"], ans:2, exp:"The decline is attributed to construction near two high-revenue downtown stores.", zh:"市中心兩家旗艦店附近施工導致客流量減少，選 (C)。" },
+      { n:179, q:"What investment does Bloomfield plan to make?", opts:["$84.7 million in store renovations","$15 million in logistics infrastructure","$34 million in digital marketing","$12 million in new store openings"], ans:1, exp:"Bloomfield plans to invest $15 million in logistics infrastructure.", zh:"計畫投資 1,500 萬美元於物流基礎設施，選 (B)。" },
+      { n:180, q:"What are the expected Q2 revenues?", opts:["$80–84 million","$84–88 million","$88–92 million","Over $100 million"], ans:2, exp:"The company expects Q2 revenues between $88 and $92 million.", zh:"Q2 預期營收 8,800 至 9,200 萬美元，選 (C)。" }
+    ]
+  },
+  // ── DOUBLE PASSAGES ──
+  {
+    type: "double",
+    meta: "Questions 181–185: Job Posting + Cover Letter",
+    passages: [
+      { label: "Job Posting", content: `<div class="doc-label">Job Posting</div>
+<h4>MARKETING COORDINATOR — FULL TIME</h4>
+<p><strong>Company:</strong> BrightPath Media<br><strong>Location:</strong> Chicago, IL (Hybrid — 3 days in office)</p>
+<p>BrightPath Media is seeking a creative and organized Marketing Coordinator to join our growing team. The ideal candidate will have at least two years of experience in digital marketing, excellent written communication skills, and proficiency in social media management tools.</p>
+<p><strong>Responsibilities include:</strong><br>
+• Assisting in the development of marketing campaigns<br>
+• Managing company social media accounts<br>
+• Coordinating with external vendors and agencies<br>
+• Preparing weekly performance reports</p>
+<p><strong>Salary range:</strong> $48,000–$58,000 per year, depending on experience.<br>
+<strong>Application deadline:</strong> April 20. Send resume and cover letter to careers@brightpathmedia.com</p>` },
+      { label: "Cover Letter", content: `<div class="doc-label">Cover Letter</div>
+<p>April 14</p>
+<p>Hiring Manager<br>BrightPath Media</p>
+<p>Dear Hiring Manager,</p>
+<p>I am writing to apply for the Marketing Coordinator position advertised on your website. I hold a Bachelor's degree in Communications and have three years of experience managing digital marketing campaigns for a mid-size retail company.</p>
+<p>In my current role, I oversee our social media presence across five platforms and regularly prepare detailed analytics reports for senior management. I am proficient in Hootsuite, Sprout Social, and Google Analytics.</p>
+<p>I am particularly excited about this opportunity because of BrightPath's reputation for innovative storytelling and client-focused campaigns. I believe my skills and enthusiasm align closely with your team's needs.</p>
+<p>I have attached my resume and look forward to the opportunity to discuss my qualifications further.</p>
+<p>Sincerely,<br>Priya Mehta</p>` }
+    ],
+    qs: [
+      { n:181, q:"What type of work arrangement does BrightPath Media offer?", opts:["Fully remote","Fully in-office","Hybrid","Contract only"], ans:2, exp:"The job posting specifies 'Hybrid — 3 days in office'.", zh:"職位說明指明為混合辦公模式，選 (C)。" },
+      { n:182, q:"What is the minimum experience required for the position?", opts:["One year","Two years","Three years","Five years"], ans:1, exp:"The posting requires 'at least two years of experience in digital marketing'.", zh:"要求至少兩年數位行銷經驗，選 (B)。" },
+      { n:183, q:"How does Priya Mehta exceed the experience requirement?", opts:["She has a graduate degree","She has three years of experience","She has managed a team of 10 people","She has worked at a media company before"], ans:1, exp:"Priya has three years of experience, exceeding the required two years.", zh:"Priya 有三年經驗，超過所需的兩年，選 (B)。" },
+      { n:184, q:"Which tool mentioned in the job posting does Priya confirm she is proficient in?", opts:["Adobe Creative Suite","Salesforce","Google Analytics","Microsoft Teams"], ans:2, exp:"The job posting mentions social media management tools; Priya mentions Google Analytics, which fits.", zh:"Priya 提及 Google Analytics，符合職缺要求，選 (C)。" },
+      { n:185, q:"By what date must applications be submitted?", opts:["April 1","April 14","April 20","April 30"], ans:2, exp:"The application deadline is April 20.", zh:"申請截止日為 4 月 20 日，選 (C)。" }
+    ]
+  },
+  {
+    type: "double",
+    meta: "Questions 186–190: Product Review + Company Response",
+    passages: [
+      { label: "Customer Review", content: `<div class="doc-label">Online Review — AquaPure Water Purifier</div>
+<p><strong>★★★☆☆ &nbsp; Works well, but filter cost is high</strong><br>Posted by: T. Bergmann</p>
+<p>I purchased the AquaPure Model 5 water purifier six months ago and have been mostly satisfied with its performance. The water quality is noticeably better, and the machine is quiet and easy to use. Setup took about 20 minutes and required no special tools.</p>
+<p>My main concern is the cost of replacement filters. At $45 per filter with a recommended replacement every two months, the annual maintenance cost comes to $270. This was not clearly communicated at the point of purchase. I feel the total cost of ownership should be more prominently displayed on the product packaging.</p>
+<p>I would still recommend this product for those who prioritize water quality, but buyers should be aware of the ongoing maintenance costs.</p>` },
+      { label: "Company Response", content: `<div class="doc-label">Response from AquaPure Customer Service</div>
+<p>Dear T. Bergmann,</p>
+<p>Thank you for taking the time to share your feedback. We are glad to hear you are satisfied with the purification performance of the Model 5.</p>
+<p>We appreciate your suggestion regarding filter cost transparency. We have shared your comments with our product packaging team, and we are in the process of updating our packaging to more clearly display the estimated annual maintenance costs.</p>
+<p>As a token of appreciation for your feedback, we would like to offer you two complimentary replacement filters, which will be shipped to your registered address within 5–7 business days.</p>
+<p>We value your continued support and hope this gesture demonstrates our commitment to customer satisfaction.</p>
+<p>Best regards,<br>AquaPure Customer Care Team</p>` }
+    ],
+    qs: [
+      { n:186, q:"What does T. Bergmann say about the product setup?", opts:["It required professional installation","It took about 20 minutes with no special tools","It was confusing and took several hours","It required a phone call to support"], ans:1, exp:"The reviewer says setup took about 20 minutes and required no special tools.", zh:"評論者說安裝約需 20 分鐘且不需專業工具，選 (B)。" },
+      { n:187, q:"What is T. Bergmann's main complaint?", opts:["The water quality is poor","The machine is too noisy","The replacement filter cost was not clearly communicated","The setup instructions were unclear"], ans:2, exp:"The main complaint is the high filter cost was not clearly communicated before purchase.", zh:"主要投訴是濾芯費用事先未清楚告知，選 (C)。" },
+      { n:188, q:"According to T. Bergmann, how much does annual filter maintenance cost?", opts:["$45","$90","$180","$270"], ans:3, exp:"$45 per filter × 6 filters per year (every 2 months) = $270.", zh:"每 2 個月換一次，每年 6 次 × $45 = $270，選 (D)。" },
+      { n:189, q:"What action is AquaPure taking in response to the feedback?", opts:["Lowering the price of replacement filters","Offering a full refund","Updating packaging to display maintenance costs","Recalling the Model 5"], ans:2, exp:"AquaPure is updating packaging to more clearly display annual maintenance costs.", zh:"AquaPure 正在更新包裝以更清楚顯示年度維護費用，選 (C)。" },
+      { n:190, q:"What will T. Bergmann receive from AquaPure?", opts:["A full refund","A $45 discount coupon","Two complimentary replacement filters","A free upgraded model"], ans:2, exp:"AquaPure is sending two complimentary replacement filters.", zh:"AquaPure 將寄送兩個免費替換濾芯，選 (C)。" }
+    ]
+  },
+  // ── TRIPLE PASSAGE ──
+  {
+    type: "triple",
+    meta: "Questions 191–195: E-mail + Policy + Form",
+    passages: [
+      { label: "E-mail", content: `<div class="doc-label">E-mail</div>
+<p><strong>From:</strong> sarah.wong@deltalogistics.com<br><strong>To:</strong> hr@deltalogistics.com<br><strong>Subject:</strong> Professional Development Request</p>
+<p>Hi,</p>
+<p>I would like to apply for the company's professional development fund to attend the Supply Chain Management Conference in Boston from June 10–12. The registration fee is $650, and I estimate travel and accommodation costs to be approximately $800.</p>
+<p>I believe this conference will directly enhance my skills in demand forecasting and inventory optimization, which align with our current team goals. Please let me know what I need to submit for approval.</p>
+<p>Thanks,<br>Sarah Wong, Logistics Analyst</p>` },
+      { label: "Policy", content: `<div class="doc-label">Company Policy — Professional Development Fund</div>
+<p><strong>Eligibility:</strong> Full-time employees who have completed at least one year of service.</p>
+<p><strong>Annual Limit:</strong> Up to $1,500 per employee per fiscal year.</p>
+<p><strong>Covered Expenses:</strong> Conference registration, travel, and accommodation directly related to professional development activities.</p>
+<p><strong>Approval Process:</strong> Employees must submit a completed PD Request Form along with supporting documentation (event registration confirmation, cost estimates) to HR at least 30 days before the event.</p>
+<p><strong>Reimbursement:</strong> Expenses are reimbursed within 15 business days following submission of receipts after the event.</p>` },
+      { label: "Form Excerpt", content: `<div class="doc-label">PD Request Form — Excerpt</div>
+<p><strong>Employee Name:</strong> Sarah Wong<br><strong>Department:</strong> Logistics<br><strong>Event Name:</strong> Supply Chain Management Conference<br><strong>Event Dates:</strong> June 10–12<br><strong>Location:</strong> Boston, MA<br><strong>Total Estimated Cost:</strong> $1,450<br><strong>Submission Date:</strong> May 5</p>` }
+    ],
+    qs: [
+      { n:191, q:"Why is Sarah Wong contacting the HR department?", opts:["To request a salary review","To apply for professional development funding","To report a workplace issue","To request a schedule change"], ans:1, exp:"Sarah is applying for the professional development fund to attend a conference.", zh:"Sarah 申請專業發展基金參加研討會，選 (B)。" },
+      { n:192, q:"What is the maximum amount Sarah can receive under the policy?", opts:["$650","$800","$1,450","$1,500"], ans:3, exp:"The policy states the annual limit is up to $1,500 per employee.", zh:"政策規定每名員工每年最多 1,500 美元，選 (D)。" },
+      { n:193, q:"How far in advance must a PD Request Form be submitted?", opts:["7 days","14 days","30 days","60 days"], ans:2, exp:"The policy requires submission at least 30 days before the event.", zh:"需在活動前至少 30 天提交，選 (C)。" },
+      { n:194, q:"Based on the form, does Sarah's request satisfy the advance submission requirement?", opts:["Yes, it was submitted more than 30 days before the event","No, it was submitted fewer than 30 days before the event","Yes, but only because of a special exception","The information is not provided"], ans:0, exp:"The event is June 10, and the submission date is May 5 — which is 36 days before the event.", zh:"5月5日提交，距6月10日有36天，超過30天要求，選 (A)。" },
+      { n:195, q:"What will Sarah need to do after the conference to receive reimbursement?", opts:["Submit a new request form","Submit receipts and wait up to 15 business days","Request a direct bank transfer","Provide a written report on the conference"], ans:1, exp:"The policy states expenses are reimbursed within 15 business days after submitting receipts.", zh:"活動後提交收據，15個工作日內報帳，選 (B)。" }
+    ]
+  },
+  {
+    type: "triple",
+    meta: "Questions 196–200: Notice + Survey + E-mail",
+    passages: [
+      { label: "Notice", content: `<div class="doc-label">Notice</div>
+<h4>STAFF CAFETERIA — UPCOMING CHANGES</h4>
+<p>Following feedback collected over the past quarter, the Operations team has worked with FreshServe Catering to redesign the staff cafeteria menu. Starting Monday, May 12, the cafeteria will introduce a new menu featuring expanded vegetarian and vegan options, a daily hot meal rotation, and a new grab-and-go section for employees with limited lunch breaks.</p>
+<p>Operating hours will be extended to 7:30 A.M.–4:00 P.M. (previously 8:00 A.M.–3:00 P.M.). Prices will remain unchanged.</p>` },
+      { label: "Survey Results", content: `<div class="doc-label">Staff Survey Summary — Cafeteria Feedback</div>
+<p><strong>Survey period:</strong> January–March<br><strong>Responses received:</strong> 142</p>
+<p><strong>Top requests:</strong><br>
+1. More vegetarian/vegan options — 78%<br>
+2. Extended operating hours — 65%<br>
+3. Faster service / grab-and-go options — 54%<br>
+4. Lower prices — 48%<br>
+5. More international cuisine — 41%</p>` },
+      { label: "E-mail", content: `<div class="doc-label">E-mail</div>
+<p><strong>From:</strong> m.russo@company.com<br><strong>To:</strong> operations@company.com<br><strong>Subject:</strong> Cafeteria Changes — Question</p>
+<p>Hi Operations Team,</p>
+<p>Thanks for the notice about the cafeteria updates — very welcome news! I just wanted to confirm: will the new grab-and-go section be ready from day one on May 12, or will it be introduced later?</p>
+<p>Also, I noticed that lower prices was a top request from the survey. Was there a reason prices weren't adjusted?</p>
+<p>Thanks,<br>Marco Russo</p>` }
+    ],
+    qs: [
+      { n:196, q:"What is one change to the cafeteria's operating hours?", opts:["It will now open 30 minutes earlier","It will close one hour later","It will be closed on Fridays","It will only serve lunch"], ans:0, exp:"Hours extended from 8:00 A.M. to 7:30 A.M. — opening 30 minutes earlier.", zh:"開放時間從早上 8:00 提前至 7:30，提早 30 分鐘，選 (A)。" },
+      { n:197, q:"According to the survey, what was the most commonly requested improvement?", opts:["Lower prices","Extended hours","More vegetarian/vegan options","International cuisine"], ans:2, exp:"More vegetarian/vegan options was requested by 78% — the highest percentage.", zh:"78% 員工要求更多素食/純素選項，比例最高，選 (C)。" },
+      { n:198, q:"Which survey request was NOT addressed in the cafeteria changes?", opts:["More vegetarian options","Extended hours","Grab-and-go section","Lower prices"], ans:3, exp:"The notice says prices will remain unchanged, so the request for lower prices was not met.", zh:"通知指出價格不變，未回應降價需求，選 (D)。" },
+      { n:199, q:"What does Marco Russo want to know?", opts:["When the new menu will be published","Whether prices will change","If the grab-and-go section will be ready on May 12","How to submit cafeteria feedback"], ans:2, exp:"Marco asks whether the grab-and-go section will be ready from day one.", zh:"Marco 詢問 grab-and-go 區是否於 5 月 12 日起即可使用，選 (C)。" },
+      { n:200, q:"What can be inferred about the cafeteria changes?", opts:["They were based entirely on management's preferences","They were developed in response to employee feedback","They will result in higher prices","They will eliminate all hot meal options"], ans:1, exp:"The notice states changes were made 'following feedback collected over the past quarter'.", zh:"通知明確說明改變源自員工反饋，選 (B)。" }
+    ]
+  }
+];
+
+// ─────────────────────────────────────────
+// STATE
+// ─────────────────────────────────────────
+let answered = {};
+let submitted = false;
+let timerInterval = null;
+let secondsLeft = 75 * 60;
+let currentPart = 5;
+let reviewedParts = new Set(); // parts whose answers have been revealed mid-test
+let pendingNextPart = null;    // next part target when modal is open (null = final submit)
+
+// ─────────────────────────────────────────
+// BUILD QUIZ
+// ─────────────────────────────────────────
+function buildQuiz() {
+  answered = {};
+  submitted = false;
+  reviewedParts = new Set();
+  pendingNextPart = null;
+  secondsLeft = 75 * 60;
+  document.getElementById('reviewBanner').classList.remove('show');
+  document.getElementById('pcmOverlay').classList.remove('show');
+
+  buildPart5();
+  buildPart6();
+  buildPart7();
+  buildDots();
+  updateCounts();
+  startTimer();
+  document.getElementById('submitAllBtn').style.display = 'block';
+  document.getElementById('submitAllBtn').disabled = false;
+}
+
+function makeBlank(text) {
+  return text.replace(/-------/g, '<span class="blank">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>');
+}
+
+// ── Part 5 ──
+function buildPart5() {
+  const body = document.getElementById('qbody5');
+  body.innerHTML = '';
+  P5.forEach((q, i) => {
+    const qn = 101 + i;
+    const card = document.createElement('div');
+    card.className = 'q-card'; card.id = 'qcard' + qn;
+    card.innerHTML = `
+      <div class="q-num">Question ${qn}</div>
+      <div class="q-text">${makeBlank(q.q)}</div>
+      <div class="options">${q.opts.map((o,oi)=>`
+        <button class="opt-btn" id="opt${qn}_${oi}" onclick="selectOpt(${qn},${oi})">
+          <span class="opt-label">${'ABCD'[oi]}</span><span>${o}</span>
+        </button>`).join('')}
+      </div>
+      <div class="explanation" id="exp${qn}">
+        <div class="exp-answer">ANSWER: (${String.fromCharCode(65+q.ans)}) ${q.opts[q.ans]}</div>
+        <div class="exp-text">${q.exp}</div>
+        <div class="exp-zh">【中文解析】${q.zh}</div>
+        <div class="exp-trans"><div class="exp-trans-label">句子翻譯</div>${q.trans}</div>
+      </div>`;
+    body.appendChild(card);
+  });
+}
+
+// ── Part 6 ──
+function buildPart6() {
+  const body = document.getElementById('qbody6');
+  body.innerHTML = '';
+  let qOffset = 131;
+  P6_PASSAGES.forEach((passage, pi) => {
+    // Build passage text with numbered blanks
+    let pText = passage.text;
+    passage.qs.forEach(pq => {
+      pText = pText.replace(`[${pq.n}]`, `<span class="blank" style="min-width:90px;">&nbsp;(${pq.n})&nbsp;</span>`);
+    });
+    pText = pText.replace(/\n/g, '<br>');
+
+    const passageDiv = document.createElement('div');
+    passageDiv.innerHTML = `
+      <div class="passage-block">
+        <div class="passage-meta">${passage.meta}</div>
+        ${pText}
+      </div>`;
+    body.appendChild(passageDiv);
+
+    passage.qs.forEach((q, qi) => {
+      const qn = q.n;
+      const card = document.createElement('div');
+      card.className = 'q-card'; card.id = 'qcard' + qn;
+      card.innerHTML = `
+        <div class="q-num">Question ${qn}</div>
+        <div class="q-text">Choose the best answer for blank (${qn}).</div>
+        <div class="options">${q.opts.map((o,oi)=>`
+          <button class="opt-btn" id="opt${qn}_${oi}" onclick="selectOpt(${qn},${oi})">
+            <span class="opt-label">${'ABCD'[oi]}</span><span>${o}</span>
+          </button>`).join('')}
+        </div>
+        <div class="explanation" id="exp${qn}">
+          <div class="exp-answer">ANSWER: (${String.fromCharCode(65+q.ans)}) ${q.opts[q.ans]}</div>
+          <div class="exp-text">${q.exp}</div>
+          <div class="exp-zh">【中文解析】${q.zh}</div>
+        </div>`;
+      body.appendChild(card);
+    });
+  });
+}
+
+// ── Part 7 ──
+function buildPart7() {
+  const body = document.getElementById('qbody7');
+  body.innerHTML = '';
+  P7_SETS.forEach(set => {
+    const wrapper = document.createElement('div');
+
+    let passageHtml = '';
+    if (set.type === 'single') {
+      passageHtml = `<div class="reading-passage">${set.passage}</div>`;
+    } else if (set.type === 'double') {
+      passageHtml = `<div class="double-passage-wrap">
+        ${set.passages.map(p=>`<div class="reading-passage">${p.content}</div>`).join('')}
+      </div>`;
+    } else if (set.type === 'triple') {
+      passageHtml = `<div class="triple-passage-wrap">
+        ${set.passages.map(p=>`<div class="reading-passage">${p.content}</div>`).join('')}
+      </div>`;
+    }
+
+    let qsHtml = set.qs.map(q => `
+      <div class="q-card" id="qcard${q.n}">
+        <div class="q-num">Question ${q.n}</div>
+        <div class="q-text">${q.q}</div>
+        <div class="options">${q.opts.map((o,oi)=>`
+          <button class="opt-btn" id="opt${q.n}_${oi}" onclick="selectOpt(${q.n},${oi})">
+            <span class="opt-label">${'ABCD'[oi]}</span><span>${o}</span>
+          </button>`).join('')}
+        </div>
+        <div class="explanation" id="exp${q.n}">
+          <div class="exp-answer">ANSWER: (${String.fromCharCode(65+q.ans)}) ${q.opts[q.ans]}</div>
+          <div class="exp-text">${q.exp}</div>
+          <div class="exp-zh">【中文解析】${q.zh}</div>
+        </div>
+      </div>`).join('');
+
+    wrapper.innerHTML = `
+      <div class="part-header" style="margin-bottom:0.75rem;">
+        <div class="part-hdr-top" style="font-size:10px;color:#aaa;">${set.meta}</div>
+      </div>
+      ${passageHtml}${qsHtml}`;
+    body.appendChild(wrapper);
+  });
+}
+
+// ─────────────────────────────────────────
+// INTERACTION
+// ─────────────────────────────────────────
+function selectOpt(qn, oi) {
+  if (submitted) return;
+  const part = qn <= 130 ? 5 : qn <= 146 ? 6 : 7;
+  if (reviewedParts.has(part)) return; // locked after mid-test review
+  const prev = answered[qn];
+  if (prev !== undefined) {
+    document.getElementById('opt'+qn+'_'+prev).classList.remove('selected');
+  }
+  answered[qn] = oi;
+  document.getElementById('opt'+qn+'_'+oi).classList.add('selected');
+  updateDot(qn, 'answered');
+  updateCounts();
+}
+
+function updateCounts() {
+  const total = Object.keys(answered).length;
+  document.getElementById('topProgress').textContent = total + ' / 100';
+
+  let c5=0,c6=0,c7=0;
+  for(let i=101;i<=130;i++) if(answered[i]!==undefined) c5++;
+  for(let i=131;i<=146;i++) if(answered[i]!==undefined) c6++;
+  for(let i=147;i<=200;i++) if(answered[i]!==undefined) c7++;
+  document.getElementById('cnt5').textContent = `已答 ${c5} / 30`;
+  document.getElementById('cnt6').textContent = `已答 ${c6} / 16`;
+  document.getElementById('cnt7').textContent = `已答 ${c7} / 54`;
+}
+
+function switchPart(part) {
+  currentPart = part;
+  ['5','6','7'].forEach(p => {
+    document.getElementById('section'+p).classList.toggle('active', p==part);
+    document.getElementById('tab'+p).classList.toggle('active', p==part);
+  });
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// ─────────────────────────────────────────
+// SIDEBAR DOTS
+// ─────────────────────────────────────────
+function buildDots() {
+  ['5','6','7'].forEach(p => {
+    const grid = document.getElementById('dotGrid'+p);
+    grid.innerHTML = '';
+    const start = p=='5'?101:p=='6'?131:147;
+    const end = p=='5'?130:p=='6'?146:200;
+    for(let qn=start;qn<=end;qn++){
+      const dot = document.createElement('div');
+      dot.className='q-dot'; dot.id='dot'+qn; dot.textContent=qn;
+      dot.onclick=()=>{
+        if(p!=currentPart) switchPart(parseInt(p));
+        setTimeout(()=>{ const el=document.getElementById('qcard'+qn); if(el) el.scrollIntoView({behavior:'smooth',block:'start'}); },150);
+      };
+      grid.appendChild(dot);
+    }
+  });
+}
+
+function updateDot(qn, state) {
+  const dot = document.getElementById('dot'+qn);
+  if(dot){ dot.className='q-dot '+state; }
+}
+
+// ─────────────────────────────────────────
+// TIMER
+// ─────────────────────────────────────────
+function startTimer() {
+  if(timerInterval) clearInterval(timerInterval);
+  timerInterval = setInterval(()=>{
+    secondsLeft--;
+    const m = Math.floor(secondsLeft/60);
+    const s = secondsLeft%60;
+    const el = document.getElementById('timerDisplay');
+    el.textContent = m+':'+(s<10?'0':'')+s;
+    el.classList.toggle('warn', secondsLeft <= 300);
+    if(secondsLeft<=0){ clearInterval(timerInterval); submitAll(); }
+  },1000);
+}
+
+// ─────────────────────────────────────────
+// PART COMPLETE MODAL
+// ─────────────────────────────────────────
+function countAnsweredInPart(part) {
+  const ranges = { 5:[101,130], 6:[131,146], 7:[147,200] };
+  const [s, e] = ranges[part];
+  let c = 0;
+  for (let i = s; i <= e; i++) if (answered[i] !== undefined) c++;
+  return c;
+}
+
+function askPartComplete(fromPart, toPartOrNull) {
+  if (submitted) return;
+  pendingNextPart = toPartOrNull;
+
+  const totals = { 5:30, 6:16, 7:54 };
+  const done = countAnsweredInPart(fromPart);
+  const total = totals[fromPart];
+  const unanswered = total - done;
+
+  document.getElementById('pcmTag').textContent = `Part ${fromPart} · 作答完畢`;
+  document.getElementById('pcmTitle').textContent = `Part ${fromPart} 已完成`;
+  document.getElementById('pcmStat').textContent = `已作答 ${done} / ${total} 題`;
+
+  let desc = '您可以立刻檢視此部分的答案與詳細解析，或繼續下一步驟。';
+  if (unanswered > 0) {
+    desc = `尚有 ${unanswered} 題未作答。未作答題目在檢視時將直接顯示正確答案。`;
+  }
+  document.getElementById('pcmDesc').textContent = desc;
+
+  const continueBtn = document.getElementById('pcmBtnContinue');
+  if (toPartOrNull) {
+    continueBtn.textContent = `跳過，繼續 Part ${toPartOrNull} →`;
+    continueBtn.className = 'pcm-btn-continue';
+  } else {
+    continueBtn.textContent = '確認交卷 →';
+    continueBtn.className = 'pcm-btn-submit-final';
+  }
+
+  document.getElementById('pcmOverlay').classList.add('show');
+}
+
+function doReviewPart() {
+  document.getElementById('pcmOverlay').classList.remove('show');
+
+  const reviewingPart = pendingNextPart ? pendingNextPart - 1 : 7;
+  revealPartAnswers(reviewingPart);
+
+  // Setup banner
+  document.getElementById('reviewBannerTitle').textContent = `Part ${reviewingPart} 答案檢視中`;
+  const bannerBtn = document.getElementById('reviewBannerBtn');
+  const sub = document.getElementById('reviewBannerSub');
+  if (pendingNextPart) {
+    bannerBtn.textContent = `繼續 Part ${pendingNextPart} →`;
+    bannerBtn.className = 'review-banner-btn';
+    sub.textContent = ' — 計時器持續運行中，其他 Part 作答不受影響';
+  } else {
+    bannerBtn.textContent = '確認交卷 →';
+    bannerBtn.className = 'review-banner-btn green';
+    sub.textContent = ' — 計時器持續運行中';
+  }
+  document.getElementById('reviewBanner').classList.add('show');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function doContinueFromModal() {
+  document.getElementById('pcmOverlay').classList.remove('show');
+  if (pendingNextPart) {
+    switchPart(pendingNextPart);
+  } else {
+    submitAll();
+  }
+  pendingNextPart = null;
+}
+
+function doContinueFromBanner() {
+  document.getElementById('reviewBanner').classList.remove('show');
+  if (pendingNextPart) {
+    switchPart(pendingNextPart);
+    pendingNextPart = null;
+  } else {
+    submitAll();
+  }
+}
+
+function revealPartAnswers(partNum) {
+  if (reviewedParts.has(partNum)) return;
+  reviewedParts.add(partNum);
+
+  const ranges = { 5:[101,130], 6:[131,146], 7:[147,200] };
+  const [start, end] = ranges[partNum];
+  const allQs = getAllQuestions();
+
+  allQs.forEach(q => {
+    const qn = q.qn;
+    if (qn < start || qn > end) return;
+    const chosen = answered[qn];
+
+    for (let oi = 0; oi < 4; oi++) {
+      const btn = document.getElementById('opt'+qn+'_'+oi);
+      if (btn) { btn.classList.add('disabled'); btn.classList.remove('selected'); }
+    }
+
+    if (chosen === undefined) {
+      document.getElementById('opt'+qn+'_'+q.ans)?.classList.add('show-correct');
+    } else if (chosen === q.ans) {
+      document.getElementById('opt'+qn+'_'+chosen)?.classList.add('correct');
+    } else {
+      document.getElementById('opt'+qn+'_'+chosen)?.classList.add('wrong');
+      document.getElementById('opt'+qn+'_'+q.ans)?.classList.add('show-correct');
+    }
+    document.getElementById('exp'+qn)?.classList.add('show');
+    updateDot(qn, chosen === q.ans ? 'correct' : 'wrong');
+  });
+}
+
+// ─────────────────────────────────────────
+// SUBMIT
+// ─────────────────────────────────────────
+function getAllQuestions() {
+  const all = [];
+  P5.forEach((q,i)=>all.push({qn:101+i,...q}));
+  P6_PASSAGES.forEach(p=>p.qs.forEach(q=>all.push({qn:q.n,...q,opts:q.opts})));
+  P7_SETS.forEach(set=>set.qs.forEach(q=>all.push({qn:q.n,...q})));
+  return all;
+}
+
+function submitAll() {
+  if(submitted) return;
+  submitted = true;
+  if(timerInterval) clearInterval(timerInterval);
+
+  let s5=0, s6=0, s7=0;
+  const allQs = getAllQuestions();
+  allQs.forEach(q => {
+    const qn = q.qn;
+    const chosen = answered[qn];
+    for(let oi=0;oi<4;oi++){
+      const btn=document.getElementById('opt'+qn+'_'+oi);
+      if(btn){ btn.classList.add('disabled'); btn.classList.remove('selected'); }
+    }
+    if(chosen===undefined){
+      // Unanswered — just show correct
+      const cb=document.getElementById('opt'+qn+'_'+q.ans);
+      if(cb) cb.classList.add('show-correct');
+    } else if(chosen===q.ans){
+      document.getElementById('opt'+qn+'_'+chosen)?.classList.add('correct');
+      if(qn<=130) s5++;
+      else if(qn<=146) s6++;
+      else s7++;
+    } else {
+      document.getElementById('opt'+qn+'_'+chosen)?.classList.add('wrong');
+      document.getElementById('opt'+qn+'_'+q.ans)?.classList.add('show-correct');
+    }
+    document.getElementById('exp'+qn)?.classList.add('show');
+    updateDot(qn, chosen===q.ans ? 'correct' : 'wrong');
+  });
+
+  // Results
+  const total = s5+s6+s7;
+  document.getElementById('rTotalScore').innerHTML = total + ' <span>/ 100</span>';
+  document.getElementById('rS5').textContent = s5;
+  document.getElementById('rS6').textContent = s6;
+  document.getElementById('rS7').textContent = s7;
+  document.getElementById('rP5').textContent = Math.round(s5/30*100)+'%';
+  document.getElementById('rP6').textContent = Math.round(s6/16*100)+'%';
+  document.getElementById('rP7').textContent = Math.round(s7/54*100)+'%';
+
+  let grade='';
+  if(total>=90) grade='Excellent — TOEIC 850+ level';
+  else if(total>=75) grade='Good — TOEIC 700–849 level';
+  else if(total>=60) grade='Fair — TOEIC 550–699 level';
+  else grade='Keep practicing — TOEIC below 550';
+  document.getElementById('rGrade').textContent = grade;
+
+  document.getElementById('submitAllBtn').style.display='none';
+  document.getElementById('resultsOverlay').classList.add('show');
+}
+
+function closeResults() {
+  document.getElementById('resultsOverlay').classList.remove('show');
+  switchPart(5);
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+function retryTest() {
+  document.getElementById('resultsOverlay').classList.remove('show');
+  window.scrollTo({top:0,behavior:'smooth'});
+  switchPart(5);
+  buildQuiz();
+}
+
+// ─────────────────────────────────────────
+// INIT
+// ─────────────────────────────────────────
+buildQuiz();
+</script>
+</body>
+</html>

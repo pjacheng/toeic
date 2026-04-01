@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TOEIC 多益閱讀模擬測驗</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f5f5f3; color: #1a1a1a; min-height: 100vh; }
+
+  /* NAV */
+  nav { background: #fff; border-bottom: 1px solid #e0ddd6; padding: 0 2rem; display: flex; align-items: center; height: 56px; gap: 1rem; }
+  .nav-logo { font-size: 15px; font-weight: 600; color: #1a1a1a; text-decoration: none; letter-spacing: -0.02em; }
+  .nav-logo span { color: #378ADD; }
+  .nav-tag { font-size: 11px; color: #888; background: #eeecea; padding: 3px 8px; border-radius: 20px; letter-spacing: 0.04em; }
+
+  /* HERO */
+  .hero { background: #1a1a1a; color: #fff; padding: 2.5rem 2rem 2rem; text-align: center; }
+  .hero-label { font-size: 11px; letter-spacing: 0.1em; color: #888; text-transform: uppercase; margin-bottom: 8px; }
+  .hero-title { font-size: 36px; font-weight: 600; letter-spacing: -0.03em; line-height: 1.2; margin-bottom: 8px; }
+  .hero-title span { color: #378ADD; }
+  .hero-sub { font-size: 16px; color: #aaa; max-width: 480px; margin: 0 auto 1.25rem; line-height: 1.6; }
+  .hero-stats { display: flex; justify-content: center; gap: 2.5rem; }
+  .stat { text-align: center; }
+  .stat-n { font-size: 28px; font-weight: 600; color: #378ADD; }
+  .stat-l { font-size: 12px; color: #888; margin-top: 2px; }
+
+  /* SECTION */
+  .section { max-width: 900px; margin: 0 auto; padding: 3rem 1.5rem; }
+  .section-title { font-size: 13px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: #888; margin-bottom: 1.25rem; border-bottom: 1px solid #e0ddd6; padding-bottom: 10px; }
+
+  /* STRUCTURE INFO */
+  .struct-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-bottom: 3rem; }
+  .struct-card { background: #fff; border: 1px solid #e0ddd6; border-radius: 12px; padding: 1.25rem; }
+  .struct-part { font-size: 11px; font-weight: 600; letter-spacing: 0.08em; color: #888; text-transform: uppercase; margin-bottom: 6px; }
+  .struct-name { font-size: 15px; font-weight: 600; color: #1a1a1a; margin-bottom: 4px; }
+  .struct-count { font-size: 28px; font-weight: 600; color: #378ADD; line-height: 1; margin-bottom: 6px; }
+  .struct-count span { font-size: 13px; color: #888; font-weight: 400; }
+  .struct-desc { font-size: 12px; color: #777; line-height: 1.5; }
+  .struct-time { font-size: 11px; color: #aaa; margin-top: 8px; padding-top: 8px; border-top: 1px solid #eee; }
+
+  /* TEST CARDS */
+  .test-grid { display: grid; gap: 1rem; }
+  .test-card { background: #fff; border: 1px solid #e0ddd6; border-radius: 12px; padding: 1.25rem 1.5rem; display: flex; align-items: center; gap: 1.25rem; text-decoration: none; color: inherit; transition: border-color 0.15s, box-shadow 0.15s; }
+  .test-card:hover { border-color: #378ADD; box-shadow: 0 2px 12px rgba(55,138,221,0.1); }
+  .test-card.locked { opacity: 0.5; pointer-events: none; }
+  .test-badge { width: 48px; height: 48px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: 700; flex-shrink: 0; }
+  .test-badge.blue { background: #EBF4FF; color: #378ADD; }
+  .test-badge.gray { background: #f0f0ef; color: #aaa; }
+  .test-info { flex: 1; }
+  .test-title { font-size: 15px; font-weight: 600; margin-bottom: 3px; }
+  .test-meta { font-size: 12px; color: #888; display: flex; gap: 1rem; }
+  .test-status { font-size: 12px; color: #378ADD; font-weight: 500; margin-left: auto; padding: 4px 12px; border: 1px solid #c8dcf5; border-radius: 20px; background: #EBF4FF; flex-shrink: 0; }
+  .test-status.coming { color: #aaa; border-color: #ddd; background: #f5f5f3; }
+
+  /* TIPS */
+  .tips-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem; }
+  .tip-card { background: #fff; border: 1px solid #e0ddd6; border-radius: 12px; padding: 1rem 1.25rem; }
+  .tip-label { font-size: 11px; font-weight: 600; letter-spacing: 0.06em; color: #378ADD; text-transform: uppercase; margin-bottom: 6px; }
+  .tip-text { font-size: 13px; color: #555; line-height: 1.6; }
+
+  footer { text-align: center; padding: 2rem; font-size: 12px; color: #aaa; border-top: 1px solid #e0ddd6; margin-top: 2rem; }
+
+  @media (max-width: 600px) {
+    .struct-grid { grid-template-columns: 1fr; }
+    .tips-grid { grid-template-columns: 1fr; }
+    .hero-title { font-size: 26px; }
+    .hero-stats { gap: 1.5rem; }
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <a class="nav-logo" href="index.html">TOEIC <span>Reading</span></a>
+  <span class="nav-tag">模擬測驗平台</span>
+</nav>
+
+<div class="hero">
+  <div class="hero-label">TOEIC Reading Test</div>
+  <div class="hero-title">多益<span>閱讀</span>模擬測驗</div>
+  <div class="hero-sub">完整仿真題目，涵蓋 Part 5、6、7，附雙語詳解，幫助你有效備考多益。</div>
+  <div class="hero-stats">
+    <div class="stat"><div class="stat-n">100</div><div class="stat-l">題 / 份</div></div>
+    <div class="stat"><div class="stat-n">75</div><div class="stat-l">分鐘限時</div></div>
+    <div class="stat"><div class="stat-n">990</div><div class="stat-l">分制滿分</div></div>
+  </div>
+</div>
+
+<div class="section">
+
+  <div class="section-title">測驗結構</div>
+  <div class="struct-grid">
+    <div class="struct-card">
+      <div class="struct-part">Part 5</div>
+      <div class="struct-name">句子填空</div>
+      <div class="struct-count">30 <span>題</span></div>
+      <div class="struct-desc">單句語法與詞彙填空<br>Q101–130</div>
+      <div class="struct-time">建議時間：10–12 分鐘</div>
+    </div>
+    <div class="struct-card">
+      <div class="struct-part">Part 6</div>
+      <div class="struct-name">段落填空</div>
+      <div class="struct-count">16 <span>題</span></div>
+      <div class="struct-desc">4 篇短文，各 4 個空格<br>Q131–146</div>
+      <div class="struct-time">建議時間：8–10 分鐘</div>
+    </div>
+    <div class="struct-card">
+      <div class="struct-part">Part 7</div>
+      <div class="struct-name">閱讀理解</div>
+      <div class="struct-count">54 <span>題</span></div>
+      <div class="struct-desc">單篇 29 題 + 多篇 25 題<br>Q147–200</div>
+      <div class="struct-time">建議時間：50–55 分鐘</div>
+    </div>
+  </div>
+
+  <div class="section-title">模擬測驗列表</div>
+  <div class="test-grid">
+    <a class="test-card" href="test-01.html">
+      <div class="test-badge blue">01</div>
+      <div class="test-info">
+        <div class="test-title">模擬測驗 第 01 回</div>
+        <div class="test-meta"><span>100 題</span><span>75 分鐘</span><span>Part 5 · 6 · 7</span></div>
+      </div>
+      <div class="test-status">開始作答</div>
+    </a>
+    <div class="test-card locked">
+      <div class="test-badge gray">02</div>
+      <div class="test-info">
+        <div class="test-title">模擬測驗 第 02 回</div>
+        <div class="test-meta"><span>100 題</span><span>75 分鐘</span><span>Part 5 · 6 · 7</span></div>
+      </div>
+      <div class="test-status coming">即將推出</div>
+    </div>
+    <div class="test-card locked">
+      <div class="test-badge gray">03</div>
+      <div class="test-info">
+        <div class="test-title">模擬測驗 第 03 回</div>
+        <div class="test-meta"><span>100 題</span><span>75 分鐘</span><span>Part 5 · 6 · 7</span></div>
+      </div>
+      <div class="test-status coming">即將推出</div>
+    </div>
+  </div>
+
+  <br><br>
+  <div class="section-title">應試技巧</div>
+  <div class="tips-grid">
+    <div class="tip-card">
+      <div class="tip-label">Part 5 策略</div>
+      <div class="tip-text">先看四個選項，判斷是「詞性題」還是「語意題」。詞性題直接看空格前後句型；語意題需理解整句意思。目標每題 20–25 秒。</div>
+    </div>
+    <div class="tip-card">
+      <div class="tip-label">Part 6 策略</div>
+      <div class="tip-text">先快速讀完整篇文章，再回頭填空。插入句子題需考慮上下文邏輯與代名詞指涉。每篇約 2–3 分鐘。</div>
+    </div>
+    <div class="tip-card">
+      <div class="tip-label">Part 7 策略</div>
+      <div class="tip-text">先看題目再讀文章（先題後文法）。善用關鍵字定位答案，不需逐字精讀。多篇文章需比對不同文件的資訊。</div>
+    </div>
+    <div class="tip-card">
+      <div class="tip-label">時間管理</div>
+      <div class="tip-text">Part 5 完成後應剩 63 分鐘；Part 6 完成後應剩 53 分鐘。最後 5 分鐘若仍有未答題目，務必全部猜答，不留空白。</div>
+    </div>
+  </div>
+
+</div>
+
+<footer>
+  TOEIC Reading 模擬測驗平台 &nbsp;·&nbsp; 僅供學習練習使用
+</footer>
+
+</body>
+</html>

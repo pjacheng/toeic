@@ -1,0 +1,541 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>單項練習 — TOEIC Reading</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f5f5f3; color: #1a1a1a; }
+
+.topbar {
+  position: sticky; top: 0; z-index: 100;
+  background: #fff; border-bottom: 1px solid #e0ddd6;
+  display: flex; align-items: center; gap: 1rem; padding: 0 1.5rem; height: 52px;
+}
+.topbar-home { font-size: 13px; color: #888; text-decoration: none; }
+.topbar-home:hover { color: #378ADD; }
+.topbar-title { font-size: 14px; font-weight: 600; flex: 1; }
+.topbar-badge { font-size: 11px; background: #EBF4FF; color: #378ADD; border: 1px solid #c8dcf5; padding: 3px 10px; border-radius: 20px; }
+
+.main { max-width: 760px; margin: 0 auto; padding: 1.5rem 1rem 4rem; }
+
+.part-header { background: #fff; border: 1px solid #e0ddd6; border-radius: 12px; padding: 1rem 1.25rem; margin-bottom: 1rem; }
+.part-hdr-top { font-size: 11px; font-weight: 600; letter-spacing: 0.08em; color: #378ADD; text-transform: uppercase; margin-bottom: 4px; }
+.part-hdr-title { font-size: 20px; font-weight: 600; margin-bottom: 6px; }
+.part-hdr-dir { font-size: 15px; color: #666; line-height: 1.6; }
+
+.q-card { background: #fff; border: 1px solid #e0ddd6; border-radius: 12px; padding: 1.25rem; margin-bottom: 1rem; scroll-margin-top: 70px; }
+.q-num { font-size: 13px; color: #aaa; letter-spacing: 0.06em; margin-bottom: 8px; }
+.q-text { font-size: 17px; font-weight: 500; color: #1a1a1a; line-height: 1.7; margin-bottom: 1rem; }
+.blank { display: inline-block; min-width: 64px; border-bottom: 2px solid #378ADD; margin: 0 2px; }
+
+.passage-block { background: #fafaf8; border: 1px solid #e8e5de; border-radius: 10px; padding: 1.25rem; margin-bottom: 1rem; font-size: 16px; line-height: 1.8; color: #333; }
+.passage-block .blank { min-width: 80px; }
+.passage-meta { font-size: 11px; color: #aaa; margin-bottom: 8px; letter-spacing: 0.04em; }
+.reading-passage { background: #fafaf8; border: 1px solid #e8e5de; border-radius: 10px; padding: 1.25rem; margin-bottom: 1rem; font-size: 15.5px; line-height: 1.85; color: #333; }
+.reading-passage h4 { font-size: 15px; font-weight: 600; margin-bottom: 8px; color: #555; letter-spacing: 0.04em; text-transform: uppercase; }
+.reading-passage p { margin-bottom: 0.75rem; }
+.reading-passage p:last-child { margin-bottom: 0; }
+.reading-passage .doc-label { font-size: 11px; background: #eeecea; display: inline-block; padding: 2px 8px; border-radius: 4px; margin-bottom: 10px; color: #666; }
+.double-passage-wrap { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem; }
+.triple-passage-wrap { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem; margin-bottom: 1rem; }
+
+.options { display: flex; flex-direction: column; gap: 7px; }
+.opt-btn { display: flex; align-items: flex-start; gap: 10px; padding: 9px 14px; border: 1px solid #e0ddd6; border-radius: 8px; background: #fff; cursor: pointer; text-align: left; font-size: 16px; color: #1a1a1a; transition: all 0.12s; line-height: 1.5; }
+.opt-btn:hover:not(.disabled) { border-color: #bbb; background: #f8f7f5; }
+.opt-label { width: 22px; height: 22px; border-radius: 50%; border: 1px solid #ccc; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 600; flex-shrink: 0; color: #888; transition: all 0.12s; margin-top: 1px; }
+.opt-btn.selected { border-color: #378ADD; background: #EBF4FF; }
+.opt-btn.selected .opt-label { background: #378ADD; border-color: #378ADD; color: #fff; }
+.opt-btn.correct { border-color: #1D9E75; background: #E1F5EE; }
+.opt-btn.correct .opt-label { background: #1D9E75; border-color: #1D9E75; color: #fff; }
+.opt-btn.wrong { border-color: #E24B4A; background: #FCEBEB; }
+.opt-btn.wrong .opt-label { background: #E24B4A; border-color: #E24B4A; color: #fff; }
+.opt-btn.show-correct { border-color: #1D9E75; }
+.opt-btn.show-correct .opt-label { background: #1D9E75; border-color: #1D9E75; color: #fff; }
+.opt-btn.disabled { cursor: default; }
+
+.explanation { margin-top: 0.875rem; padding: 0.875rem 1rem; background: #f5f5f3; border-radius: 8px; border-left: 3px solid #378ADD; display: none; }
+.explanation.show { display: block; }
+.exp-answer { font-size: 13px; font-weight: 600; color: #185FA5; margin-bottom: 5px; letter-spacing: 0.04em; text-transform: uppercase; }
+.exp-text { font-size: 15px; color: #333; line-height: 1.7; }
+.exp-zh { font-size: 15px; color: #666; margin-top: 5px; line-height: 1.6; }
+.exp-trans { font-size: 15px; color: #444; margin-top: 8px; padding-top: 8px; border-top: 1px dashed #ddd; line-height: 1.65; }
+.exp-trans-label { font-size: 12px; font-weight: 600; letter-spacing: 0.06em; color: #aaa; text-transform: uppercase; margin-bottom: 3px; }
+
+.bottom-bar { position: sticky; bottom: 0; background: #fff; border-top: 1px solid #e0ddd6; padding: 1rem 0; display: flex; align-items: center; gap: 1rem; margin-top: 1.5rem; }
+.btn-submit { padding: 12px 32px; background: #378ADD; color: #fff; border: none; border-radius: 8px; font-size: 15px; font-weight: 600; cursor: pointer; transition: opacity 0.15s; }
+.btn-submit:hover { opacity: 0.88; }
+.btn-submit:disabled { opacity: 0.4; cursor: not-allowed; }
+.btn-retry { padding: 11px 24px; background: #fff; border: 1px solid #ccc; border-radius: 8px; font-size: 14px; cursor: pointer; display: none; }
+.btn-retry:hover { background: #f5f5f3; }
+.progress-text { font-size: 13px; color: #888; flex: 1; text-align: right; }
+
+/* SCORE PANEL */
+.score-panel { display: none; background: #fff; border: 1px solid #e0ddd6; border-radius: 12px; padding: 1.5rem; margin-bottom: 1rem; text-align: center; }
+.score-panel.show { display: block; }
+.score-big { font-size: 52px; font-weight: 600; line-height: 1; }
+.score-big span { font-size: 18px; font-weight: 400; color: #aaa; }
+.score-pct { font-size: 16px; color: #888; margin-top: 6px; }
+.score-label { font-size: 13px; color: #aaa; margin-top: 4px; }
+.submit-status { font-size: 13px; color: #aaa; margin-top: 10px; display: none; }
+.submit-status.show { display: block; }
+
+/* START SCREEN */
+.start-screen { display: flex; position: fixed; inset: 0; background: #f5f5f3; z-index: 300; align-items: center; justify-content: center; padding: 1.5rem; }
+.start-screen.hidden { display: none; }
+.start-box { background: #fff; border: 1px solid #e0ddd6; border-radius: 16px; width: 100%; max-width: 420px; overflow: hidden; }
+.start-head { background: #1a1a1a; color: #fff; padding: 1.75rem 2rem 1.5rem; }
+.start-tag { font-size: 11px; color: #888; letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 8px; }
+.start-title { font-size: 22px; font-weight: 600; margin-bottom: 4px; }
+.start-sub { font-size: 14px; color: #aaa; }
+.start-body { padding: 1.5rem 2rem 2rem; }
+.start-label { font-size: 13px; font-weight: 500; color: #555; margin-bottom: 6px; }
+.start-input { width: 100%; padding: 10px 14px; font-size: 15px; border: 1px solid #ddd; border-radius: 8px; outline: none; transition: border-color 0.15s; margin-bottom: 1.25rem; }
+.start-input:focus { border-color: #378ADD; }
+.start-btn { width: 100%; padding: 13px; background: #378ADD; color: #fff; border: none; border-radius: 8px; font-size: 15px; font-weight: 600; cursor: pointer; transition: opacity 0.15s; }
+.start-btn:hover { opacity: 0.88; }
+
+@media (max-width: 600px) {
+  .double-passage-wrap, .triple-passage-wrap { grid-template-columns: 1fr; }
+  .q-text { font-size: 16px; }
+}
+</style>
+</head>
+<body>
+
+<!-- START SCREEN -->
+<div class="start-screen" id="startScreen">
+  <div class="start-box">
+    <div class="start-head">
+      <div class="start-tag">TOEIC Reading · 單項練習</div>
+      <div class="start-title" id="startTitle"></div>
+      <div class="start-sub" id="startSub"></div>
+    </div>
+    <div class="start-body">
+      <div class="start-label">姓名（作答紀錄用）<span style="font-size:12px;color:#aaa;font-weight:400;margin-left:6px;">非必填</span></div>
+      <input class="start-input" id="studentName" type="text" placeholder="請輸入姓名（可留空）" maxlength="30"
+             onkeydown="if(event.key==='Enter') startPractice()">
+      <button class="start-btn" onclick="startPractice()">開始練習 →</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOP BAR -->
+<div class="topbar">
+  <a class="topbar-home" href="index.html">← 首頁</a>
+  <div class="topbar-title" id="topTitle">單項練習</div>
+  <div class="topbar-badge" id="topBadge"></div>
+</div>
+
+<div class="main">
+  <div class="score-panel" id="scorePanel">
+    <div class="score-big" id="scoreBig">0 <span>/ 0</span></div>
+    <div class="score-pct" id="scorePct"></div>
+    <div class="score-label">作答完畢</div>
+    <div class="submit-status" id="submitStatus"></div>
+  </div>
+
+  <div class="part-header" id="partHeader">
+    <div class="part-hdr-top" id="partTag"></div>
+    <div class="part-hdr-title" id="partTitle"></div>
+    <div class="part-hdr-dir" id="partDir"></div>
+  </div>
+
+  <div id="qbody"></div>
+
+  <div class="bottom-bar">
+    <button class="btn-submit" id="submitBtn" onclick="submitPractice()" disabled>交卷</button>
+    <button class="btn-retry" id="retryBtn" onclick="location.reload()">再練一次</button>
+    <div class="progress-text" id="progressText">0 / 0 已作答</div>
+  </div>
+</div>
+
+<script>
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycby7jsyHd1GzsUXGZdIJPdxtesde4cwHKGx4_y0c_9DFJrOLCm8oPes2OxyIIDTCIW4n2g/exec';
+
+// ─────────────────────────────────────────
+// QUESTION DATA
+// ─────────────────────────────────────────
+const P5 = [
+  { qn:101, q:"The project manager requested that all team members ------- their progress reports by Friday.", opts:["submits","submit","submitted","submitting"], ans:1, exp:"After 'request that', the verb uses subjunctive mood (base form).", zh:"'request that' 後接假設語氣，動詞用原形，選 (B)。", trans:"專案經理要求所有團隊成員在週五前提交進度報告。" },
+  { qn:102, q:"The new employee quickly became ------- with the company's internal software system.", opts:["familiar","familiarly","familiarity","familiarize"], ans:0, exp:"'Became' is a linking verb; it takes an adjective. 'Familiar with' = comfortable knowing.", zh:"連綴動詞後接形容詞，'familiar with' 表熟悉，選 (A)。", trans:"新進員工很快就熟悉了公司的內部軟體系統。" },
+  { qn:103, q:"------- the budget cuts, the research team managed to complete the study on schedule.", opts:["Because of","Despite","Although","While"], ans:1, exp:"'Despite' is a preposition used before a noun phrase to show contrast.", zh:"'Despite' 為介系詞，後接名詞，表讓步對比，選 (B)。", trans:"儘管遭遇預算刪減，研究團隊仍設法按時完成了這項研究。" },
+  { qn:104, q:"Employees are encouraged to submit ------- suggestions for improving workplace safety.", opts:["construct","constructs","constructive","constructively"], ans:2, exp:"An adjective is needed before the noun 'suggestions'.", zh:"修飾名詞需形容詞，'constructive'（有建設性的），選 (C)。", trans:"員工被鼓勵提出有建設性的建議，以改善工作場所的安全。" },
+  { qn:105, q:"The annual conference will be held ------- the downtown convention center this November.", opts:["at","in","on","by"], ans:0, exp:"'At' is used with specific named venues and buildings.", zh:"特定建築物或場所前用 'at'，選 (A)。", trans:"年度會議將於今年十一月在市中心會議中心舉行。" },
+  { qn:106, q:"Sales figures for the third quarter were ------- higher than originally projected.", opts:["significance","significant","significantly","signify"], ans:2, exp:"An adverb modifies the comparative adjective 'higher'.", zh:"修飾形容詞比較級需副詞，選 (C) significantly。", trans:"第三季的銷售數字顯著高於原本的預測。" },
+  { qn:107, q:"The CEO announced the company would ------- its operations into three new Asian markets.", opts:["expand","expands","expanded","expansion"], ans:0, exp:"Modal 'would' is followed by the base form of the verb.", zh:"情態動詞 'would' 後接動詞原形，選 (A)。", trans:"執行長宣布公司將把業務擴展到三個新的亞洲市場。" },
+  { qn:108, q:"All applicants ------- submit a cover letter along with their resume to be considered.", opts:["should","must","can","might"], ans:1, exp:"'Must' expresses a strict mandatory requirement in official instructions.", zh:"'must' 語氣最強，表必要條件，選 (B)。", trans:"所有申請人必須隨履歷一併提交求職信，才能被列入考慮。" },
+  { qn:109, q:"The ------- of the new product exceeded management's expectations in design and functionality.", opts:["develop","developer","development","developing"], ans:2, exp:"A noun is needed as the subject of the sentence.", zh:"句子需名詞作主詞，'development'，選 (C)。", trans:"新產品的開發在設計和功能方面都超越了管理層的預期。" },
+  { qn:110, q:"Please contact our customer service department ------- you experience any difficulties.", opts:["if","unless","so that","even though"], ans:0, exp:"'If' introduces a conditional clause.", zh:"'if' 引導條件子句，選 (A)。", trans:"如果您遇到任何困難，請聯繫我們的客服部門。" },
+  { qn:111, q:"The marketing team worked ------- to ensure the product launch was a success.", opts:["tire","tireless","tirelessly","tirelessness"], ans:2, exp:"An adverb modifies the verb 'worked'.", zh:"修飾動詞需副詞，'tirelessly'（不倦地），選 (C)。", trans:"行銷團隊不懈努力，確保產品發布圓滿成功。" },
+  { qn:112, q:"The board of directors will meet ------- a week to review the company's financial performance.", opts:["once","one","every","each"], ans:0, exp:"'Once a week' is a fixed expression meaning one time per week.", zh:"'once a week' 為固定搭配，選 (A)。", trans:"董事會將每週召開一次會議，審查公司的財務狀況。" },
+  { qn:113, q:"The training seminar is ------- for all new hires in the sales and marketing departments.", opts:["mandate","mandatory","mandatorily","mandating"], ans:1, exp:"An adjective is needed after the linking verb 'is'.", zh:"連綴動詞後接形容詞，'mandatory'（強制的），選 (B)。", trans:"培訓研討會對銷售和行銷部門的所有新進員工為強制性。" },
+  { qn:114, q:"Ms. Tanaka was ------- for her outstanding contributions to the international marketing campaign.", opts:["recognize","recognition","recognized","recognizing"], ans:2, exp:"Passive voice: 'was + past participle'.", zh:"被動語態 'was + Vpp'，選 (C)。", trans:"田中女士因對國際行銷活動的傑出貢獻而獲得表彰。" },
+  { qn:115, q:"The report indicates that consumer confidence has risen ------- over the past six months.", opts:["steady","steadier","steadily","steadiness"], ans:2, exp:"An adverb modifies the verb 'risen'.", zh:"修飾動詞需副詞，'steadily'，選 (C)。", trans:"報告顯示，消費者信心在過去六個月中穩定上升。" },
+  { qn:116, q:"The company policy ------- employees from using personal devices during working hours.", opts:["prohibits","prohibitions","prohibitive","prohibit"], ans:0, exp:"Third-person singular subject requires verb + -s.", zh:"第三人稱單數主詞，動詞加 -s，選 (A)。", trans:"公司政策禁止員工在工作時間使用個人裝置。" },
+  { qn:117, q:"We are pleased to inform you that your application has been ------- reviewed by our hiring committee.", opts:["thorough","thoroughly","thoroughness","thoroughgoing"], ans:1, exp:"An adverb modifies the passive verb phrase.", zh:"修飾動詞片語需副詞，'thoroughly'，選 (B)。", trans:"我們很高興地通知您，您的申請已由本公司招聘委員會徹底審閱。" },
+  { qn:118, q:"The new facility will be large ------- to accommodate up to five hundred employees.", opts:["enough","too","very","so"], ans:0, exp:"'Adj + enough + to V' expresses sufficiency.", zh:"'adj + enough + to V' 句型，選 (A)。", trans:"新設施將足夠大，可容納多達五百名員工。" },
+  { qn:119, q:"The revised budget proposal must be submitted ------- Monday at the latest.", opts:["until","by","at","since"], ans:1, exp:"'By' with a deadline means 'no later than'.", zh:"'by' 表期限，「不遲於」，選 (B)。", trans:"修訂後的預算提案最遲必須在週一前提交。" },
+  { qn:120, q:"The ------- of the merger between the two companies is expected to create thousands of new jobs.", opts:["complete","completes","completing","completion"], ans:3, exp:"A noun is needed as the subject; 'completion of the merger' is a natural phrase.", zh:"需名詞作主詞，'completion'，選 (D)。", trans:"兩家公司完成合併後，預計將創造數千個新就業機會。" },
+  { qn:121, q:"The shipment will arrive ------- two weeks, depending on customs clearance.", opts:["within","during","among","between"], ans:0, exp:"'Within' indicates a time frame before a deadline.", zh:"'within' 表「在……之內」，選 (A)。", trans:"貨物將在兩週內到達，視清關情況而定。" },
+  { qn:122, q:"The supervisor asked the intern to make ------- copies of the financial report.", opts:["addition","additional","additionally","add"], ans:1, exp:"An adjective is needed before the noun 'copies'.", zh:"修飾名詞需形容詞，'additional'，選 (B)。", trans:"主管要求實習生多印幾份財務報告。" },
+  { qn:123, q:"The new software upgrade is ------- with all operating systems released after 2018.", opts:["compatible","compatibility","compatibly","compatibleness"], ans:0, exp:"Adjective needed after linking verb 'is'; 'compatible with' is a fixed phrase.", zh:"'is' 後接形容詞，'compatible with' 為固定搭配，選 (A)。", trans:"新的軟體升級與 2018 年後發布的所有作業系統相容。" },
+  { qn:124, q:"Customers who place orders before noon will ------- same-day delivery.", opts:["receive","receiving","received","to receive"], ans:0, exp:"'Will' is a modal followed by the base form.", zh:"情態動詞 'will' 後接原形，選 (A)。", trans:"在中午前下訂單的顧客將享有當日配送服務。" },
+  { qn:125, q:"The ------- renovations to the office building will be completed by the end of the quarter.", opts:["schedule","scheduled","scheduling","scheduler"], ans:1, exp:"Past participle 'scheduled' acts as an adjective modifying 'renovations'.", zh:"過去分詞作形容詞修飾名詞，'scheduled'，選 (B)。", trans:"辦公大樓的預定翻修工程將於本季末完成。" },
+  { qn:126, q:"Due to heavy traffic, the delivery truck arrived ------- than expected.", opts:["late","later","latest","lately"], ans:1, exp:"Comparative form 'later' follows 'than'.", zh:"'than' 前需比較級，'later'，選 (B)。", trans:"由於交通壅塞，送貨卡車比預期晚到。" },
+  { qn:127, q:"The company's new dress code policy applies to ------- full-time and part-time employees.", opts:["either","both","neither","each"], ans:1, exp:"'Both ... and ...' connects two items inclusively.", zh:"'both ... and ...' 表兩者皆是，選 (B)。", trans:"公司的新服裝規定適用於全職和兼職員工。" },
+  { qn:128, q:"Participants are asked to ------- their seats before the keynote speech begins.", opts:["find","finding","found","be find"], ans:0, exp:"After 'are asked to', the base form (infinitive) is used.", zh:"'asked to' 後接動詞原形，選 (A)。", trans:"與會者被要求在主題演講開始前就座。" },
+  { qn:129, q:"The manager was ------- by the quality of the intern's final report.", opts:["impress","impression","impressive","impressed"], ans:3, exp:"Passive adjective 'impressed' describes the manager's emotional state.", zh:"表情緒狀態用過去分詞，'impressed'，選 (D)。", trans:"經理對實習生最終報告的品質印象深刻。" },
+  { qn:130, q:"All ------- materials for the training workshop will be provided at no extra cost.", opts:["require","required","requirement","requiring"], ans:1, exp:"Past participle 'required' modifies the noun 'materials'.", zh:"過去分詞修飾名詞，'required'（所需的），選 (B)。", trans:"培訓工作坊所需的所有材料將免費提供。" }
+];
+
+const P6 = [
+  { idx:0, meta:"段落填空 — Email", label:"第 1 組",
+    text:`Dear Mr. Chen,\n\nI am writing to confirm your reservation at the Meridian Hotel for the nights of March 15–17. Your room will be [131] upon your arrival at 3:00 P.M. As requested, we have arranged a non-smoking room on the tenth floor with a city view.\n\nPlease note that our complimentary breakfast is [132] from 7:00 to 10:00 A.M. in the main dining area. Should you require early check-in, we kindly ask that you contact the front desk [133] advance so that we may accommodate your request.\n\n[134] any assistance prior to your visit, please do not hesitate to contact us directly.\n\nWarm regards,\nMeridian Hotel Guest Services`,
+    qs:[
+      { n:131, opts:["ready","readiness","readily","readying"], ans:0, exp:"'Be ready' is the correct predicate adjective after the linking verb 'will be'.", zh:"'will be' 後接形容詞，'ready'（已準備好），選 (A)。" },
+      { n:132, opts:["serve","served","serving","service"], ans:1, exp:"Passive voice: breakfast 'is served' during specific hours.", zh:"早餐「被供應」用被動，'served'，選 (B)。" },
+      { n:133, opts:["in","on","with","for"], ans:0, exp:"'In advance' is a fixed prepositional phrase meaning ahead of time.", zh:"'in advance' 為固定搭配，表提前，選 (A)。" },
+      { n:134, opts:["If you need","Should you require","Requiring","You need"], ans:1, exp:"'Should + subject + verb' is a formal conditional inversion used in business writing.", zh:"'Should you require' 為正式倒裝條件句，選 (B)。" }
+    ]
+  },
+  { idx:1, meta:"段落填空 — Notice", label:"第 2 組",
+    text:`NOTICE TO ALL STAFF\n\nEffective Monday, April 7, the building management will [135] routine maintenance on the elevators in the north wing. As a result, these elevators will be [136] from 8:00 A.M. to 5:00 P.M. on weekdays for approximately two weeks.\n\nDuring this period, employees are encouraged to use the south wing elevators or the stairwells, which remain fully accessible. We apologize for any [137] this may cause. [138]\n\nThank you for your cooperation.\nBuilding Management`,
+    qs:[
+      { n:135, opts:["conduct","conducts","conducted","be conducting"], ans:0, exp:"'Will + base form' is the standard future tense construction.", zh:"'will' 後接原形動詞，選 (A)。" },
+      { n:136, opts:["operational","unavailable","expanded","relocated"], ans:1, exp:"The context says maintenance will occur, so elevators will be 'unavailable'.", zh:"進行維護期間電梯「無法使用」，選 (B)。" },
+      { n:137, opts:["convenient","inconvenience","convenience","inconveniently"], ans:1, exp:"A noun is needed after 'any'; 'inconvenience' fits the context.", zh:"'any' 後接名詞，不便之處用 'inconvenience'，選 (B)。" },
+      { n:138, opts:["We look forward to serving you.","Your patience and understanding are greatly appreciated.","Please submit your complaints in writing.","The elevator will not return to service."], ans:1, exp:"A closing sentence thanking people for patience fits the apology context.", zh:"結尾感謝耐心配合，語意最自然，選 (B)。" }
+    ]
+  },
+  { idx:2, meta:"段落填空 — Memorandum", label:"第 3 組",
+    text:`MEMORANDUM\n\nTo: All Department Heads\nFrom: Human Resources\nRe: Annual Performance Review Schedule\n\nThis memo is to inform you that the annual performance review cycle will begin on May 1. All department heads are [139] to submit completed evaluation forms for each of their direct reports no later than May 31.\n\nThe forms are available for download on the company intranet. Please ensure that evaluations are [140] and objective, focusing on measurable achievements and areas for professional growth. Reviews that are [141] incomplete or improperly completed will be returned for revision.\n\n[142] questions about the process, please contact the HR department at extension 204.\n\nThank you.`,
+    qs:[
+      { n:139, opts:["requested","requesting","request","to request"], ans:0, exp:"'Are requested to' is a formal passive construction meaning 'are asked to'.", zh:"'are requested to' 為正式被動，表要求，選 (A)。" },
+      { n:140, opts:["thorough","thoroughly","thoroughness","thoroughfare"], ans:0, exp:"Two adjectives joined by 'and' are needed: 'thorough and objective'.", zh:"與 'objective' 並列需形容詞，'thorough'，選 (A)。" },
+      { n:141, opts:["considered","determined","deemed","found"], ans:2, exp:"'Deemed' means 'judged to be'; it collocates naturally with 'incomplete'.", zh:"'deemed' 表判定為，搭配 'incomplete' 最自然，選 (C)。" },
+      { n:142, opts:["For","About","Regarding","Should you have"], ans:3, exp:"'Should you have questions' is a formal conditional inversion appropriate for memos.", zh:"正式備忘錄常用 'Should you have...' 倒裝條件句，選 (D)。" }
+    ]
+  },
+  { idx:3, meta:"段落填空 — Advertisement", label:"第 4 組",
+    text:`GREENLEAF CORPORATE CATERING\nFresh · Flexible · Reliable\n\nIs your office [143] the right catering partner? Look no further than Greenleaf Corporate Catering, your trusted provider of healthy, delicious meals for business events of all sizes.\n\nWe offer fully customizable menus [144] a variety of dietary requirements, including vegetarian, vegan, and gluten-free options. Whether you are planning a team lunch, a board meeting, or a company-wide celebration, our professional staff will ensure your event runs [145].\n\nContact us today to receive a complimentary quote. [146] orders placed at least 72 hours in advance will qualify for our early-booking discount of 10%.\n\nVisit us at www.greenleafcatering.com`,
+    qs:[
+      { n:143, opts:["searching for","searched","in search","to search"], ans:0, exp:"'Is your office searching for...' is the natural progressive form for a question.", zh:"疑問句用進行式，'searching for'，選 (A)。" },
+      { n:144, opts:["catered to","accommodating","satisfying","meeting"], ans:1, exp:"'Accommodating a variety of dietary requirements' means catering to different dietary needs.", zh:"'accommodating' 表顧及各種需求，搭配最自然，選 (B)。" },
+      { n:145, opts:["smooth","smoothly","smoothness","smoother"], ans:1, exp:"An adverb modifies the verb 'runs'.", zh:"修飾動詞 'runs' 需副詞，'smoothly'，選 (B)。" },
+      { n:146, opts:["All","Any","Every","Each"], ans:0, exp:"'All orders' refers collectively to the entire category of orders meeting the condition.", zh:"'All orders' 指所有符合條件的訂單，選 (A)。" }
+    ]
+  }
+];
+
+const P7 = [
+  { label:"第 1 組 — E-mail", type:"single",
+    passage:`<div class="doc-label">E-mail</div><p><strong>From:</strong> j.harris@veritastech.com<br><strong>To:</strong> allstaff@veritastech.com<br><strong>Subject:</strong> Office Closure — Public Holiday</p><p>Dear Team,</p><p>This is a reminder that the office will be closed on Monday, April 7, in observance of the national public holiday. Normal business hours will resume on Tuesday, April 8.</p><p>If you have any urgent matters that require attention during the closure, please contact the on-call support team at support@veritastech.com. Response times may be longer than usual.</p><p>Enjoy the long weekend!</p><p>Best,<br>Janet Harris<br>Office Manager, Veritas Technology</p>`,
+    qs:[
+      { n:1, q:"Why was the e-mail sent?", opts:["To announce a new support policy","To inform staff of an office closure","To introduce a new office manager","To reschedule a team meeting"], ans:1, exp:"The e-mail clearly states the office will be closed on April 7.", zh:"郵件主旨為告知辦公室關閉，選 (B)。" },
+      { n:2, q:"What are employees told to do for urgent matters?", opts:["Call Janet Harris directly","Submit a written request","E-mail the on-call support team","Wait until Tuesday"], ans:2, exp:"The e-mail says to contact the on-call support team at support@veritastech.com.", zh:"郵件指示聯繫 on-call 支援小組，選 (C)。" }
+    ]
+  },
+  { label:"第 2 組 — Notice", type:"single",
+    passage:`<div class="doc-label">Notice</div><h4>CITY LIBRARY — SUMMER READING PROGRAM</h4><p>The City Library is pleased to announce the launch of its annual Summer Reading Program, running from June 1 to August 31. This year's theme is <em>"Explore the World Through Books."</em></p><p>Participants of all ages are welcome. Children aged 5–12 who complete at least eight books will receive a Certificate of Achievement. Adults who log 15 or more books will be entered into a prize draw for a $200 gift card.</p><p>To register, visit the front desk or sign up online at www.citylibrary.org/summer. Registration is free. The program begins June 1; registration closes May 25.</p>`,
+    qs:[
+      { n:1, q:"What is the theme of this year's Summer Reading Program?", opts:["Discovering Local Heroes","Explore the World Through Books","Science and Technology","Celebrating Community Stories"], ans:1, exp:"The notice states the theme is 'Explore the World Through Books'.", zh:"公告明確指出主題，選 (B)。" },
+      { n:2, q:"What will children who complete at least eight books receive?", opts:["A gift card","A free library membership","A Certificate of Achievement","A prize draw entry"], ans:2, exp:"Children completing eight books receive a Certificate of Achievement.", zh:"8本以上獲頒成就證書，選 (C)。" },
+      { n:3, q:"When is the deadline for registration?", opts:["June 1","August 31","May 25","July 1"], ans:2, exp:"Registration closes May 25.", zh:"報名截止 5 月 25 日，選 (C)。" }
+    ]
+  },
+  { label:"第 3 組 — Article", type:"single",
+    passage:`<div class="doc-label">Business News</div><h4>NEXWAVE COMMUNICATIONS EXPANDS INTO SOUTHEAST ASIA</h4><p>NexWave Communications, a leading provider of cloud-based business software, announced on Tuesday that it will open regional offices in Singapore and Jakarta by the end of the year. The expansion is part of the company's five-year growth strategy.</p><p>CEO Maria Delgado stated the company plans to hire approximately 200 local employees across both locations. "Southeast Asia represents an enormous growth opportunity," said Delgado. "We are committed to hiring local talent and building solutions tailored to regional needs."</p><p>NexWave currently operates in 14 countries and reported annual revenues of $1.2 billion last year.</p>`,
+    qs:[
+      { n:1, q:"What did NexWave Communications announce?", opts:["A new software product launch","Quarterly revenue results","Plans to open offices in Southeast Asia","A merger with a competitor"], ans:2, exp:"The article states NexWave will open offices in Singapore and Jakarta.", zh:"宣布將在東南亞開設辦事處，選 (C)。" },
+      { n:2, q:"According to the CEO, what is one of NexWave's goals?", opts:["Reducing operational costs","Hiring local talent","Acquiring a local company","Relocating its headquarters"], ans:1, exp:"Delgado says they are 'committed to hiring local talent'.", zh:"CEO 表示致力於雇用當地人才，選 (B)。" },
+      { n:3, q:"How many countries does NexWave currently operate in?", opts:["2","8","14","20"], ans:2, exp:"The article states NexWave currently operates in 14 countries.", zh:"文中明確指出 14 個國家，選 (C)。" }
+    ]
+  },
+  { label:"第 4 組 — Memo", type:"single",
+    passage:`<div class="doc-label">Internal Memo</div><p><strong>To:</strong> All Staff<br><strong>From:</strong> IT Department<br><strong>Re:</strong> Mandatory System Update</p><p>The IT department will perform a critical security update to all company computers this weekend. The update will be applied automatically on Saturday evening between 10:00 P.M. and 3:00 A.M.</p><p>All employees must leave their computers powered on and connected to the company network before leaving on Friday afternoon. Laptops taken home should be left connected to power and Wi-Fi.</p><p>After the update, you may notice the login screen has a slightly different appearance. Your username and password will remain unchanged. For issues, contact the IT help desk at extension 301 or helpdesk@company.com.</p>`,
+    qs:[
+      { n:1, q:"What is the purpose of this memo?", opts:["To announce a new company policy","To notify staff of a mandatory IT update","To introduce new login credentials","To schedule a system shutdown"], ans:1, exp:"The memo informs staff about a mandatory security update.", zh:"備忘錄通知員工進行強制安全更新，選 (B)。" },
+      { n:2, q:"What must employees do before leaving on Friday?", opts:["Back up all their files","Log out of all applications","Leave computers on and connected to the network","Submit a support request"], ans:2, exp:"Staff must leave computers powered on and connected to the company network.", zh:"員工須讓電腦保持開機並連接公司網路，選 (C)。" },
+      { n:3, q:"What will change after the update?", opts:["Login credentials","The login screen appearance","The company Wi-Fi password","The email system"], ans:1, exp:"The login screen may have a slightly different appearance.", zh:"登入畫面外觀可能略有不同，選 (B)。" },
+      { n:4, q:"Who should employees contact if they have problems?", opts:["Their direct supervisor","The HR department","The IT help desk","The building manager"], ans:2, exp:"Contact the IT help desk at extension 301 or helpdesk@company.com.", zh:"聯繫 IT 服務台，選 (C)。" }
+    ]
+  },
+  { label:"第 5 組 — Double Passage", type:"double",
+    passages:[
+      { content:`<div class="doc-label">Job Posting</div><h4>MARKETING COORDINATOR</h4><p><strong>Company:</strong> BrightPath Media &nbsp;·&nbsp; Chicago, IL (Hybrid)</p><p>BrightPath Media seeks a creative Marketing Coordinator. The ideal candidate will have at least two years of digital marketing experience, excellent written communication skills, and proficiency in social media management tools.</p><p><strong>Responsibilities:</strong> Developing campaigns, managing social media, coordinating vendors, preparing weekly reports.<br><strong>Salary:</strong> $48,000–$58,000/year.<br><strong>Deadline:</strong> April 20. Send resume to careers@brightpathmedia.com</p>` },
+      { content:`<div class="doc-label">Cover Letter</div><p>April 14</p><p>Dear Hiring Manager,</p><p>I am writing to apply for the Marketing Coordinator position. I hold a Bachelor's degree in Communications and have three years of experience managing digital marketing campaigns for a mid-size retail company.</p><p>I oversee social media across five platforms and prepare detailed analytics reports. I am proficient in Hootsuite, Sprout Social, and Google Analytics.</p><p>I am excited about BrightPath's reputation for innovative storytelling. I believe my skills align closely with your team's needs.</p><p>Sincerely,<br>Priya Mehta</p>` }
+    ],
+    qs:[
+      { n:1, q:"What type of work arrangement does BrightPath Media offer?", opts:["Fully remote","Fully in-office","Hybrid","Contract only"], ans:2, exp:"The job posting specifies 'Hybrid'.", zh:"職位說明指明為混合辦公模式，選 (C)。" },
+      { n:2, q:"How does Priya Mehta exceed the experience requirement?", opts:["She has a graduate degree","She has three years of experience","She has managed a team of 10 people","She has worked at a media company before"], ans:1, exp:"Priya has three years, exceeding the required two years.", zh:"Priya 有三年經驗，超過所需的兩年，選 (B)。" },
+      { n:3, q:"By what date must applications be submitted?", opts:["April 1","April 14","April 20","April 30"], ans:2, exp:"The application deadline is April 20.", zh:"申請截止日為 4 月 20 日，選 (C)。" }
+    ]
+  },
+  { label:"第 6 組 — Report", type:"single",
+    passage:`<div class="doc-label">Quarterly Report</div><h4>BLOOMFIELD RETAIL GROUP — Q1 SUMMARY</h4><p>Bloomfield Retail Group reported total revenues of $84.7 million for Q1, a 12% increase year-over-year. Growth was driven by online sales, which grew 34% and now account for 41% of total revenue.</p><p>In contrast, in-store sales declined by 3% due to construction near two flagship locations in the downtown district.</p><p>The company plans to invest $15 million in logistics infrastructure over the next 18 months. CEO Thomas Bloom stated, "We are confident our digital-first strategy positions us for sustainable long-term growth."</p><p>Bloomfield expects Q2 revenues of $88–$92 million.</p>`,
+    qs:[
+      { n:1, q:"What was Bloomfield's total Q1 revenue?", opts:["$74.7 million","$84.7 million","$88 million","$92 million"], ans:1, exp:"The report states total revenues of $84.7 million for Q1.", zh:"Q1 總營收為 8,470 萬美元，選 (B)。" },
+      { n:2, q:"Why did in-store sales decline?", opts:["Poor product selection","Price competition","Construction near flagship stores","Decreased marketing spending"], ans:2, exp:"The decline is attributed to construction near downtown stores.", zh:"市中心旗艦店附近施工導致客流量減少，選 (C)。" },
+      { n:3, q:"What investment does Bloomfield plan to make?", opts:["$84.7 million in renovations","$15 million in logistics infrastructure","$34 million in digital marketing","$12 million in new stores"], ans:1, exp:"Bloomfield plans to invest $15 million in logistics infrastructure.", zh:"計畫投資 1,500 萬美元於物流基礎設施，選 (B)。" },
+      { n:4, q:"What are the expected Q2 revenues?", opts:["$80–84 million","$84–88 million","$88–92 million","Over $100 million"], ans:2, exp:"The company expects Q2 revenues between $88 and $92 million.", zh:"Q2 預期營收 8,800 至 9,200 萬美元，選 (C)。" }
+    ]
+  }
+];
+
+// ─────────────────────────────────────────
+// STATE
+// ─────────────────────────────────────────
+const params   = new URLSearchParams(window.location.search);
+const PART     = parseInt(params.get('part')) || 5;
+const N        = Math.min(30, Math.max(1, parseInt(params.get('n')) || 10));
+
+let questions  = [];   // { id, q, opts, ans, exp, zh, trans?, qn? }
+let answered   = {};   // id → option index
+let submitted  = false;
+let studentName = '';
+let setLabel   = '';
+
+// ─────────────────────────────────────────
+// INIT START SCREEN
+// ─────────────────────────────────────────
+(function initStartScreen() {
+  let title = '', sub = '';
+  if (PART === 5) { title = `Part 5 · ${N} 題練習`; sub = `從 30 題中隨機選出 ${N} 題`; }
+  if (PART === 6) { title = 'Part 6 · 段落填空'; sub = '隨機一組段落填空（4 題）'; }
+  if (PART === 7) { title = 'Part 7 · 閱讀理解'; sub = '隨機一組閱讀理解'; }
+  document.getElementById('startTitle').textContent = title;
+  document.getElementById('startSub').textContent   = sub;
+})();
+
+function startPractice() {
+  studentName = document.getElementById('studentName').value.trim() || '匿名';
+  document.getElementById('startScreen').classList.add('hidden');
+  buildPractice();
+}
+
+// ─────────────────────────────────────────
+// BUILD QUESTIONS
+// ─────────────────────────────────────────
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+function buildPractice() {
+  const body = document.getElementById('qbody');
+  body.innerHTML = '';
+
+  if (PART === 5) buildP5(body);
+  else if (PART === 6) buildP6(body);
+  else buildP7(body);
+
+  updateProgress();
+  document.getElementById('submitBtn').disabled = false;
+}
+
+function makeBlank(text) {
+  return text.replace(/-------/g, '<span class="blank">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>');
+}
+
+// ── Part 5 ──
+function buildP5(body) {
+  const selected = shuffle(P5).slice(0, N);
+  questions = selected.map((q, i) => ({ id: i, ...q }));
+
+  const partTag = `Part 5 · ${N} 題`;
+  document.getElementById('topTitle').textContent = 'Part 5 單項練習';
+  document.getElementById('topBadge').textContent = `${N} 題`;
+  document.getElementById('partTag').textContent   = partTag;
+  document.getElementById('partTitle').textContent = 'Incomplete Sentences';
+  document.getElementById('partDir').textContent   = 'A word or phrase is missing in each sentence. Select the best answer to complete the sentence.';
+  setLabel = `Part 5 · ${N}題 (隨機)`;
+
+  questions.forEach(q => body.appendChild(makeQCard(q)));
+}
+
+// ── Part 6 ──
+function buildP6(body) {
+  const set = P6[Math.floor(Math.random() * P6.length)];
+  setLabel = `Part 6 · ${set.label}`;
+
+  document.getElementById('topTitle').textContent = 'Part 6 單項練習';
+  document.getElementById('topBadge').textContent = set.label;
+  document.getElementById('partTag').textContent   = `Part 6 · 段落填空`;
+  document.getElementById('partTitle').textContent = 'Text Completion';
+  document.getElementById('partDir').textContent   = 'Read the passage and choose the best word, phrase, or sentence for each blank.';
+
+  let pText = set.text;
+  set.qs.forEach(q => {
+    pText = pText.replace(`[${q.n}]`, `<span class="blank" style="min-width:90px;">&nbsp;(${q.n})&nbsp;</span>`);
+  });
+  pText = pText.replace(/\n/g, '<br>');
+
+  const passDiv = document.createElement('div');
+  passDiv.innerHTML = `<div class="passage-block"><div class="passage-meta">${set.meta}</div>${pText}</div>`;
+  body.appendChild(passDiv);
+
+  questions = set.qs.map((q, i) => ({
+    id: i, qn: q.n, q: `Choose the best answer for blank (${q.n}).`,
+    opts: q.opts, ans: q.ans, exp: q.exp, zh: q.zh
+  }));
+  questions.forEach(q => body.appendChild(makeQCard(q)));
+}
+
+// ── Part 7 ──
+function buildP7(body) {
+  const set = P7[Math.floor(Math.random() * P7.length)];
+  setLabel = `Part 7 · ${set.label}`;
+
+  document.getElementById('topTitle').textContent = 'Part 7 單項練習';
+  document.getElementById('topBadge').textContent = set.label;
+  document.getElementById('partTag').textContent   = `Part 7 · 閱讀理解`;
+  document.getElementById('partTitle').textContent = 'Reading Comprehension';
+  document.getElementById('partDir').textContent   = 'Read the text and choose the best answer for each question.';
+
+  let passageHtml = '';
+  if (set.type === 'single') {
+    passageHtml = `<div class="reading-passage">${set.passage}</div>`;
+  } else if (set.type === 'double') {
+    passageHtml = `<div class="double-passage-wrap">${set.passages.map(p=>`<div class="reading-passage">${p.content}</div>`).join('')}</div>`;
+  }
+  const passDiv = document.createElement('div');
+  passDiv.innerHTML = passageHtml;
+  body.appendChild(passDiv);
+
+  questions = set.qs.map((q, i) => ({
+    id: i, qn: q.n, q: q.q, opts: q.opts, ans: q.ans, exp: q.exp, zh: q.zh
+  }));
+  questions.forEach(q => body.appendChild(makeQCard(q)));
+}
+
+// ── Q Card factory ──
+function makeQCard(q) {
+  const card = document.createElement('div');
+  card.className = 'q-card'; card.id = 'qcard' + q.id;
+  card.innerHTML = `
+    <div class="q-num">Question ${q.id + 1}</div>
+    <div class="q-text">${makeBlank(q.q)}</div>
+    <div class="options">${q.opts.map((o,oi)=>`
+      <button class="opt-btn" id="opt${q.id}_${oi}" onclick="selectOpt(${q.id},${oi})">
+        <span class="opt-label">${'ABCD'[oi]}</span><span>${o}</span>
+      </button>`).join('')}
+    </div>
+    <div class="explanation" id="exp${q.id}">
+      <div class="exp-answer">ANSWER: (${String.fromCharCode(65+q.ans)}) ${q.opts[q.ans]}</div>
+      <div class="exp-text">${q.exp}</div>
+      <div class="exp-zh">【中文解析】${q.zh}</div>
+      ${q.trans ? `<div class="exp-trans"><div class="exp-trans-label">句子翻譯</div>${q.trans}</div>` : ''}
+    </div>`;
+  return card;
+}
+
+// ─────────────────────────────────────────
+// INTERACTION
+// ─────────────────────────────────────────
+function selectOpt(id, oi) {
+  if (submitted) return;
+  const prev = answered[id];
+  if (prev !== undefined) document.getElementById(`opt${id}_${prev}`).classList.remove('selected');
+  answered[id] = oi;
+  document.getElementById(`opt${id}_${oi}`).classList.add('selected');
+  updateProgress();
+}
+
+function updateProgress() {
+  const done  = Object.keys(answered).length;
+  const total = questions.length;
+  document.getElementById('progressText').textContent = `${done} / ${total} 已作答`;
+}
+
+// ─────────────────────────────────────────
+// SUBMIT
+// ─────────────────────────────────────────
+function submitPractice() {
+  if (submitted) return;
+  submitted = true;
+
+  let score = 0;
+  const answerLog = [];
+
+  questions.forEach(q => {
+    const chosen = answered[q.id];
+    for (let oi = 0; oi < 4; oi++) {
+      document.getElementById(`opt${q.id}_${oi}`)?.classList.add('disabled');
+      document.getElementById(`opt${q.id}_${oi}`)?.classList.remove('selected');
+    }
+    if (chosen === undefined) {
+      document.getElementById(`opt${q.id}_${q.ans}`)?.classList.add('show-correct');
+    } else if (chosen === q.ans) {
+      document.getElementById(`opt${q.id}_${chosen}`)?.classList.add('correct');
+      score++;
+    } else {
+      document.getElementById(`opt${q.id}_${chosen}`)?.classList.add('wrong');
+      document.getElementById(`opt${q.id}_${q.ans}`)?.classList.add('show-correct');
+    }
+    document.getElementById(`exp${q.id}`)?.classList.add('show');
+
+    answerLog.push({
+      qn: q.qn || (q.id + 1),
+      selectedLabel: chosen !== undefined ? 'ABCD'[chosen] : '—',
+      correct: chosen === q.ans
+    });
+  });
+
+  // Show score panel
+  const panel = document.getElementById('scorePanel');
+  panel.classList.add('show');
+  document.getElementById('scoreBig').innerHTML = `${score} <span>/ ${questions.length}</span>`;
+  document.getElementById('scorePct').textContent = Math.round(score / questions.length * 100) + '% 正確率';
+  document.getElementById('submitBtn').style.display = 'none';
+  document.getElementById('retryBtn').style.display = 'block';
+  panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+  sendToSheet(score, questions.length, answerLog);
+}
+
+// ─────────────────────────────────────────
+// SEND TO GOOGLE SHEETS
+// ─────────────────────────────────────────
+function sendToSheet(score, total, answerLog) {
+  if (!APPS_SCRIPT_URL) return;
+  const now = new Date();
+  const pad = n => String(n).padStart(2,'0');
+  const timestamp = `${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())} ${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
+
+  const payload = {
+    type: 'practice',
+    timestamp,
+    name: studentName,
+    label: setLabel,
+    score,
+    total,
+    answers: answerLog
+  };
+
+  const statusEl = document.getElementById('submitStatus');
+  statusEl.textContent = '正在儲存作答紀錄…';
+  statusEl.classList.add('show');
+
+  fetch(APPS_SCRIPT_URL, {
+    method: 'POST', mode: 'no-cors',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload)
+  })
+  .then(() => {
+    statusEl.textContent = '✓ 作答紀錄已儲存';
+    statusEl.style.color = '#1D9E75';
+  })
+  .catch(() => {
+    statusEl.textContent = '⚠ 紀錄儲存失敗';
+    statusEl.style.color = '#E24B4A';
+  });
+}
+</script>
+</body>
+</html>

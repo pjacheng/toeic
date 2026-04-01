@@ -67,11 +67,13 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
 .btn-submit { padding: 12px 32px; background: #378ADD; color: #fff; border: none; border-radius: 8px; font-size: 15px; font-weight: 600; cursor: pointer; transition: opacity 0.15s; }
 .btn-submit:hover { opacity: 0.88; }
 .btn-submit:disabled { opacity: 0.4; cursor: not-allowed; }
-.btn-retry { padding: 11px 24px; background: #fff; border: 1px solid #ccc; border-radius: 8px; font-size: 14px; cursor: pointer; display: none; }
+.post-actions { display: none; justify-content: center; flex-wrap: wrap; gap: 10px; margin-top: 1.5rem; padding: 1rem 0; border-top: 1px solid #e0ddd6; }
+.post-actions.show { display: flex; }
+.btn-retry { padding: 11px 24px; background: #fff; border: 1px solid #ccc; border-radius: 8px; font-size: 14px; cursor: pointer; }
 .btn-retry:hover { background: #f5f5f3; }
-.btn-more { padding: 11px 20px; background: #EBF4FF; border: 1px solid #c8dcf5; border-radius: 8px; font-size: 14px; color: #378ADD; font-weight: 500; cursor: pointer; display: none; }
+.btn-more { padding: 11px 20px; background: #EBF4FF; border: 1px solid #c8dcf5; border-radius: 8px; font-size: 14px; color: #378ADD; font-weight: 500; cursor: pointer; }
 .btn-more:hover { background: #d8ecff; }
-.btn-home { padding: 11px 20px; background: #fff; border: 1px solid #ccc; border-radius: 8px; font-size: 14px; cursor: pointer; display: none; text-decoration: none; color: #555; }
+.btn-home { padding: 11px 20px; background: #fff; border: 1px solid #ccc; border-radius: 8px; font-size: 14px; cursor: pointer; text-decoration: none; color: #555; }
 .btn-home:hover { background: #f5f5f3; }
 .progress-text { font-size: 13px; color: #888; flex: 1; text-align: right; }
 
@@ -150,11 +152,14 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
 
   <div class="bottom-bar">
     <button class="btn-submit" id="submitBtn" onclick="submitPractice()" disabled>交卷</button>
-    <button class="btn-retry" id="retryBtn" onclick="location.reload()">再練一次</button>
-    <button class="btn-more" id="more5Btn" onclick="goMore(5)">再來 5 題</button>
-    <button class="btn-more" id="more10Btn" onclick="goMore(10)">再來 10 題</button>
-    <a class="btn-home" id="homeBtn" href="index.html">← 回首頁</a>
     <div class="progress-text" id="progressText">0 / 0 已作答</div>
+  </div>
+
+  <div class="post-actions" id="postActions">
+    <button class="btn-retry" onclick="location.reload()">再練一次</button>
+    <button class="btn-more" id="more5Btn" onclick="goMore(5)" style="display:none">再來 5 題</button>
+    <button class="btn-more" id="more10Btn" onclick="goMore(10)" style="display:none">再來 10 題</button>
+    <a class="btn-home" href="index.html">← 回首頁</a>
   </div>
 </div>
 
@@ -500,11 +505,10 @@ function submitPractice() {
   document.getElementById('scoreBig').innerHTML = `${score} <span>/ ${questions.length}</span>`;
   document.getElementById('scorePct').textContent = Math.round(score / questions.length * 100) + '% 正確率';
   document.getElementById('submitBtn').style.display = 'none';
-  document.getElementById('retryBtn').style.display = 'block';
-  document.getElementById('homeBtn').style.display = 'block';
+  document.getElementById('postActions').classList.add('show');
   if (PART === 5) {
-    if (N !== 5)  document.getElementById('more5Btn').style.display = 'inline-block';
-    if (N !== 10) document.getElementById('more10Btn').style.display = 'inline-block';
+    document.getElementById('more5Btn').style.display = 'inline-block';
+    document.getElementById('more10Btn').style.display = 'inline-block';
   }
   panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
 

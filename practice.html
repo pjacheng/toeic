@@ -505,6 +505,7 @@ function submitPractice() {
   document.getElementById('scoreBig').innerHTML = `${score} <span>/ ${questions.length}</span>`;
   document.getElementById('scorePct').textContent = Math.round(score / questions.length * 100) + '% 正確率';
   document.getElementById('submitBtn').style.display = 'none';
+  document.querySelector('.bottom-bar').style.display = 'none';
   document.getElementById('postActions').classList.add('show');
   if (PART === 5) {
     document.getElementById('more5Btn').style.display = 'inline-block';
